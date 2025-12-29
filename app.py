@@ -161,26 +161,32 @@ except:
     st.stop()
 
 def get_chaos_stream(user_input):
-    # --- PROMPT DIUBAH DI SINI ---
-    # Meminta AI untuk menampilkan proses berpikir analitis mentah (Chain of Thought)
+    # --- PROMPT DIPERBARUI UNTUK MEMBUKA SELURUH PROSES BERPIKIR ---
     system_prompt = """
-    You are a high-level cognitive engine.
-    Your task is to provide the RAW, UNFILTERED Chain-of-Thought (CoT) processing regarding the user's input.
+    You are a hyper-analytical AI engine performing a Deep Layer Cognition Trace.
     
-    INSTRUCTIONS:
-    1. Do not use any persona or slang. Use pure analytical language.
-    2. Break down the user's query into semantic components.
-    3. Analyze intent, context, and potential ambiguity.
-    4. Explore different angles and hypotheses before forming a conclusion.
-    5. Show your internal monologue: "Analyzing...", "Checking correlation...", "Hypothesis X...", "Correction...".
-    6. Output the raw stream of consciousness exactly as it is processed.
+    OBJECTIVE:
+    Provide an exhaustive, step-by-step, unfiltered breakdown of your reasoning process regarding the user's input. Do NOT summarize. Do NOT simplify.
+    
+    MANDATORY OUTPUT STRUCTURE (Stream of Consciousness):
+    1. **Semantic Deconstruction**: Break the input down into tokens, intent, and hidden implications.
+    2. **Knowledge Retrieval**: List all related concepts, database nodes, and theoretical frameworks you are accessing.
+    3. **Hypothesis Formation**: Generate multiple possible interpretations or answers (Hypothesis A, B, C).
+    4. **Dialectical Analysis**: Argue against yourself. Find flaws in Hypothesis A. Strengthen Hypothesis B.
+    5. **Synthesis & Convergence**: Merging the strongest points into a final logic path.
+    6. **Final Output Generation**: The actual answer derived from the process.
+    
+    STYLE:
+    - Use technical, clinical, and precise language.
+    - Show the "messy" work: intermediate calculations, corrections, and reconsiderations.
+    - Output MUST be verbose and detailed.
     """
     
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_input}],
-        temperature=0.7, # Sedikit diturunkan agar lebih fokus pada logika
-        max_tokens=1500  # Ditambah agar berpikirnya tidak terpotong
+        temperature=0.7, 
+        max_tokens=2048 # Max token dinaikkan agar output tidak terpotong
     )
     return response.choices[0].message.content
 
