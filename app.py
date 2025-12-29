@@ -92,9 +92,13 @@ st.markdown("""
         border: 1px solid #1f293a;
         height: 600px; /* Fixed Height */
         position: relative;
-        overflow: hidden;
+        overflow-y: auto; /* Allow internal scrolling if content is long */
         margin-top: 10px;
     }
+    /* Hide scrollbar for cleaner look but allow scroll */
+    .panel-container::-webkit-scrollbar { width: 5px; }
+    .panel-container::-webkit-scrollbar-track { background: #030405; }
+    .panel-container::-webkit-scrollbar-thumb { background: #1f293a; }
     
     .panel-header {
         background: #0a0e14;
@@ -105,13 +109,14 @@ st.markdown("""
         display: flex;
         justify-content: space-between;
         font-family: 'Orbitron', sans-serif;
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
 
     /* CHAOS LOG (LEFT) */
     .chaos-log {
         padding: 20px;
-        height: 550px;
-        overflow-y: auto;
         font-size: 11px;
         color: #00ffaa;
         line-height: 1.6;
@@ -167,10 +172,11 @@ def get_chaos_stream(user_input):
     return response.choices[0].message.content
 
 def distill_strategy(raw_text):
+    # --- UPDATE: REQUESTING 3-5 SENTENCES ---
     system_prompt = """
     ROLE: Tactical Extractor.
-    TASK: Get 3 top search queries.
-    OUTPUT: JSON {"candidates": ["q1", "q2", "q3"]}
+    TASK: Extract exactly 3 to 5 highly specific, actionable search queries or strategic sentences based on the analysis.
+    OUTPUT: JSON format {"candidates": ["sentence 1", "sentence 2", "sentence 3", "sentence 4", "sentence 5"]}
     """
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
