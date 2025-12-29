@@ -1,101 +1,87 @@
 import streamlit as st
 from groq import Groq
-from duckduckgo_search import DDGS
+import json
 
 # --- SETUP ---
-st.set_page_config(page_title="Raw AI Logic (Free)", page_icon="🧠")
+st.set_page_config(page_title="Backend JSON Inspector", page_icon="👨‍💻", layout="wide")
 
-# --- AMBIL API KEY (GROQ) ---
+# --- AMBIL API KEY ---
 try:
     if "GROQ_API_KEY" in st.secrets:
-        api_key = st.secrets["GROQ_API_KEY"]
-        client = Groq(api_key=api_key)
+        client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     else:
-        st.error("⚠️ GROQ API Key belum dimasukkan di Streamlit Secrets.")
+        st.error("⚠️ Masukkan API Key di Secrets.")
         st.stop()
-except Exception as e:
-    st.error(f"Error Konfigurasi: {e}")
+except Exception:
     st.stop()
 
-# --- FUNGSI UTAMA (LLAMA 3.3 RAW LOGIC) ---
-def get_ai_thought(user_input):
-    # SYSTEM PROMPT: RAW LOGIC (Sama persis dengan versi GPT-4o tadi)
+# --- FUNGSI GENERATOR JSON (BACKEND LOGIC) ---
+def get_backend_json(user_input):
+    # SYSTEM PROMPT: FORMAT STRICT JSON
+    # Kita menyuruh AI berhenti jadi chatbot, dan berubah jadi mesin pemroses data.
+    # Output WAJIB format JSON, persis seperti data yang lalu lalang di Inspect Network.
     system_instruction = """
-    You are the search module of a Super Intelligent AI.
-    User Input: "{user_input}"
+    You are a headless AI Search Agent.
     
-    Task: 
-    To answer this user strictly and accurately, determine the BEST Google Search Query.
+    Your goal: Analyze the user prompt and construct a JSON object to trigger a search engine API.
     
-    Constraints:
-    1. Do not try to be helpful to the user yet. focus on retrieving data.
-    2. Choose the language (English vs Indonesian) based on where the best data resides.
+    RULES:
+    1. Do NOT speak to the user.
+    2. OUTPUT ONLY VALID JSON.
+    3. Determine the 'search_query' based on the most effective keyword (English or Local).
+    4. Determine 'intent' (informational/transactional/navigational).
     
-    Output Format:
-    Reasoning: [Short reason why you chose this query]
-    Query: [The exact search string]
+    JSON STRUCTURE:
+    {
+      "tool_used": "google_search_v2",
+      "user_intent": "...",
+      "detected_language": "...",
+      "search_query_optimized": "..."
+    }
     """
 
-    # Kita pakai Llama 3.3 70B (Model paling pintar di Groq, setara GPT-4)
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile", 
+        model="llama-3.3-70b-versatile",
         messages=[
-            {"role": "system", "content": system_instruction.format(user_input=user_input)},
+            {"role": "system", "content": system_instruction},
+            {"role": "user", "content": user_input}
         ],
-        temperature=0, # Logika Murni (Robot)
+        temperature=0, # Logika Murni
+        response_format={"type": "json_object"} # MEMAKSA OUTPUT JADI JSON MURNI
     )
     return response.choices[0].message.content
 
-# --- UI ---
-st.title("🧠 AI Search Logic (Raw Llama 3.3)")
+# --- UI TAMPILAN INSPECT NETWORK ---
+st.title("👨‍💻 AI Network Inspector (JSON View)")
 st.markdown("""
-**Mesin:** Llama 3.3 70B (via Groq).
-Model ini memiliki kecerdasan setara GPT-4.
-Settingan ini menggunakan **Temperature 0** (Logika Murni) tanpa rekayasa prompt bahasa.
+**Mode Debug:** Menampilkan *Raw Payload* yang dikirim otak AI ke Search Engine.
+Ini adalah tampilan yang biasa dilihat developer saat membuka **Inspect Element -> Network**.
 """)
 
-user_prompt = st.text_input("Prompt User:", placeholder="Contoh: jasa arsitek sukabumi")
+user_prompt = st.text_input("User Prompt:", placeholder="jasa arsitek sukabumi")
 
-if st.button("🔴 Bongkar Pikiran AI"):
+if st.button("🔴 Inspect Network"):
     if user_prompt:
         try:
-            with st.spinner("Mengakses Neural Network..."):
-                # Ambil respon asli
-                raw_response = get_ai_thought(user_prompt)
+            with st.spinner("Intercepting Data Packets..."):
+                # Ambil Raw JSON
+                raw_json_str = get_backend_json(user_prompt)
                 
-                # Parsing Manual
-                lines = raw_response.split('\n')
-                reasoning = "N/A"
-                query = user_prompt
+                # Ubah string jadi Object Python biar rapi
+                data_object = json.loads(raw_json_str)
                 
-                for line in lines:
-                    if "Reasoning:" in line:
-                        reasoning = line.replace("Reasoning:", "").strip()
-                    if "Query:" in line:
-                        query = line.replace("Query:", "").strip().replace('"', '')
-
-            # HASIL
-            st.success("✅ Keputusan Algoritma:")
-            
-            st.write("**Alasan (Reasoning):**")
-            st.info(reasoning)
-            
-            st.write("**Keyword yang dicari (Query):**")
-            st.code(query, language="text")
-            
-            # CEK SEARCH ENGINE
-            st.divider()
-            st.caption(f"Hasil pencarian nyata untuk: {query}")
-            # Region kita set 'wt-wt' (World) biar adil kalau keyword inggris
-            results = DDGS().text(query, region="wt-wt", safesearch="off", max_results=3)
-            
-            if results:
-                for res in results:
-                    st.markdown(f"**[{res['title']}]({res['href']})**")
-                    st.write(res['body'])
-                    st.markdown("---")
-            else:
-                st.warning("Tidak ada hasil search.")
+                # TAMPILAN SEPERTI INSPECT ELEMENT
+                st.subheader("📡 Payload Data (Request Body)")
+                st.caption("Ini adalah data asli yang dipikirkan AI:")
+                
+                # Tampilkan JSON Mentah
+                st.json(data_object)
+                
+                # Highlight Keywordnya saja
+                st.divider()
+                keyword = data_object.get("search_query_optimized", "Error")
+                st.success(f"🔑 **Extracted Keyword:** {keyword}")
+                st.info("👆 Gunakan keyword di atas untuk judul artikel Anda.")
 
         except Exception as e:
             st.error(f"Error: {e}")
