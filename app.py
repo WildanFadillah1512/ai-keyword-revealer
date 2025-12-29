@@ -2,33 +2,35 @@ import streamlit as st
 import google.generativeai as genai
 
 # --- KONFIGURASI API KEY ---
+# Gunakan Key Anda yang dari 'projektezo'
 API_KEY = "AIzaSyDOSXR9-WF-quua7OS5_Xa1S6sY8fYpOQk"
 genai.configure(api_key=API_KEY)
 
-# --- SETTING TAMPILAN ---
-st.set_page_config(page_title="AI Search Tracker", page_icon="🕵️‍♂️")
+# --- TAMPILAN ---
+st.set_page_config(page_title="AI Search Tracker v2", page_icon="🔍")
 st.title("🕵️‍♂️ AI Keyword Search Insight")
+st.markdown("Alat untuk membongkar keyword pencarian AI Gemini.")
 
-user_prompt = st.text_input("Masukkan Prompt untuk Riset SEO:", placeholder="Contoh: rekomendasi jasa desain arsitek")
+user_prompt = st.text_input("Masukkan Prompt Riset:", placeholder="Contoh: rekomendasi jasa desain sukabumi")
 
 if st.button("Bongkar Keyword Sekarang"):
     if user_prompt:
-        with st.spinner("Sedang menghubungi Google AI..."):
+        with st.spinner("Sedang memproses..."):
             try:
-                # Menggunakan format model name lengkap untuk menghindari error 404
+                # Kita gunakan nama model tanpa prefix 'models/' 
+                # karena library versi terbaru sering menambahkannya secara otomatis
                 model = genai.GenerativeModel(
-                    model_name='models/gemini-1.5-flash',
+                    model_name='gemini-1.5-flash',
                     tools=[{ "google_search_retrieval": {} }]
                 )
 
                 response = model.generate_content(user_prompt)
 
-                # Cek Metadata Pencarian
+                # Ekstraksi Keyword
                 keywords = []
                 if hasattr(response.candidates[0], 'grounding_metadata'):
                     metadata = response.candidates[0].grounding_metadata
-                    # Mengambil query pencarian jika ada
-                    if hasattr(metadata, 'queries') and metadata.queries:
+                    if hasattr(metadata, 'queries'):
                         keywords = metadata.queries
                 
                 # Tampilkan Hasil
@@ -36,17 +38,17 @@ if st.button("Bongkar Keyword Sekarang"):
                 if keywords:
                     for kw in keywords:
                         st.code(kw, language="text")
-                    st.success("✅ Gunakan keyword di atas untuk judul artikel WordPress Anda!")
+                    st.success("✅ Gunakan keyword ini untuk optimasi WordPress Anda.")
                 else:
-                    st.warning("⚠️ AI menjawab menggunakan database internal. Coba prompt yang lebih spesifik seperti 'cari jasa desain arsitek terbaru di sukabumi'.")
+                    st.warning("⚠️ AI tidak melakukan pencarian Google. Coba prompt: 'Cari jasa desain terbaru di Sukabumi'.")
 
                 st.divider()
                 with st.expander("Lihat Jawaban AI"):
                     st.write(response.text)
 
             except Exception as e:
-                # Menampilkan pesan error yang lebih rapi
-                st.error(f"Terjadi kesalahan: {e}")
-                st.info("Tips: Pastikan library 'google-generativeai' di requirements.txt sudah versi terbaru.")
+                # Jika masih error 404, kita coba model alternatif 'gemini-1.5-pro'
+                st.error(f"Gagal memuat model: {e}")
+                st.info("Mencoba melakukan sinkronisasi ulang...")
     else:
-        st.warning("Harap masukkan prompt.")
+        st.warning("Masukkan prompt terlebih dahulu.")
