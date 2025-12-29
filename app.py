@@ -111,6 +111,7 @@ st.markdown("""
         font-size: 11px;
         line-height: 1.6;
         opacity: 0.9;
+        white-space: pre-wrap; /* Agar format teks terjaga */
     }
 
     /* --- RESULT CARD STYLING FOR ST.CONTAINER --- */
@@ -160,24 +161,34 @@ except:
     st.stop()
 
 def get_chaos_stream(user_input):
+    # --- PROMPT DIUBAH DI SINI ---
+    # Meminta AI untuk menampilkan proses berpikir analitis mentah (Chain of Thought)
     system_prompt = """
-    ROLE: Orbital AI Core.
-    TASK: Analyze input. Output raw, messy, technical thought process.
-    LANG: Mix English (Technical) and Indonesian (Reasoning). "Jaksel" Cyberpunk style.
-    OUTPUT: Continuous text block.
+    You are a high-level cognitive engine.
+    Your task is to provide the RAW, UNFILTERED Chain-of-Thought (CoT) processing regarding the user's input.
+    
+    INSTRUCTIONS:
+    1. Do not use any persona or slang. Use pure analytical language.
+    2. Break down the user's query into semantic components.
+    3. Analyze intent, context, and potential ambiguity.
+    4. Explore different angles and hypotheses before forming a conclusion.
+    5. Show your internal monologue: "Analyzing...", "Checking correlation...", "Hypothesis X...", "Correction...".
+    6. Output the raw stream of consciousness exactly as it is processed.
     """
+    
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_input}],
-        temperature=0.8, max_tokens=1000
+        temperature=0.7, # Sedikit diturunkan agar lebih fokus pada logika
+        max_tokens=1500  # Ditambah agar berpikirnya tidak terpotong
     )
     return response.choices[0].message.content
 
 def distill_strategy(raw_text):
     system_prompt = """
     ROLE: Tactical Extractor.
-    TASK: Extract exactly 3 to 5 highly specific, actionable search queries or strategic sentences.
-    OUTPUT: JSON format {"candidates": ["sentence 1", "sentence 2", "sentence 3", "sentence 4", "sentence 5"]}
+    TASK: Based on the raw analysis provided, extract exactly 3 to 5 highly specific, actionable conclusions or strategic points.
+    OUTPUT: JSON format {"candidates": ["point 1", "point 2", "point 3", "point 4", "point 5"]}
     """
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -223,9 +234,9 @@ if run_btn and user_query:
         except:
             candidates = ["DATA CORRUPTED", "RETRY"]
             
-    # LEFT PANEL: CHAOS (Masih pake HTML container karena teks panjang)
+    # LEFT PANEL: CHAOS (Raw Logika AI)
     with c_chaos:
-        st.caption(f"/// RAW_STREAM_LOG // ID: {random.randint(1000,9999)}")
+        st.caption(f"/// RAW_COGNITIVE_LOG // ID: {random.randint(1000,9999)}")
         with st.container(height=600, border=True):
             st.markdown(f'<div class="chaos-text">{raw_stream}</div>', unsafe_allow_html=True)
 
@@ -240,9 +251,6 @@ if run_btn and user_query:
             for i, item in enumerate(candidates):
                 conf = random.randint(92, 99)
                 
-                # Ini adalah trick untuk membuat "Card" pakai st.container
-                # CSS class 'result-card-container' akan menarget container ini jika inspect element,
-                # tapi styling basic sudah cukup rapi.
                 with st.container():
                     st.markdown("---") # Pembatas tipis
                     c_head, c_conf = st.columns([3, 1])
@@ -251,7 +259,7 @@ if run_btn and user_query:
                     with c_conf:
                         st.caption(f"{conf}%")
                     
-                    st.write(item) # Native write
+                    st.write(item) 
                     st.caption(f"FILE_ID: DAT_{random.randint(10,99)} // READY")
 
 else:
