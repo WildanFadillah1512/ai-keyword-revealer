@@ -1,100 +1,61 @@
 import streamlit as st
 import google.generativeai as genai
 
-# --- CONFIG ---
-# API Key Anda (Hardcoded sesuai permintaan)
+# --- KONFIGURASI API KEY ---
 API_KEY = "AIzaSyDOSXR9-WF-quua7OS5_Xa1S6sY8fYpOQk"
 genai.configure(api_key=API_KEY)
 
-st.set_page_config(page_title="AI Keyword Insight", page_icon="🕵️‍♂️")
+# --- SETTING HALAMAN ---
+st.set_page_config(page_title="AI Search Revealer", page_icon="💎")
+st.title("💎 AI Keyword Insight (Gemini 2.5 Pro)")
+st.markdown("""
+Menggunakan model **Gemini 2.5 Pro** - Model tercanggih di akun Anda.
+Alat ini akan memaksa AI mencari data di Google dan membocorkan keyword-nya.
+""")
 
-st.title("🕵️‍♂️ AI Search Keyword Revealer")
-st.write("Versi Diagnosa Otomatis")
-
-# --- FUNGSI PENCARIAN ---
-def run_search(model_name_to_use, prompt):
-    # Setup Model dengan Tools Google Search
-    model = genai.GenerativeModel(
-        model_name=model_name_to_use,
-        tools=[{ "google_search_retrieval": {} }]
-    )
-    return model.generate_content(prompt)
-
-# --- USER INPUT ---
-user_prompt = st.text_input("Masukkan Prompt:", placeholder="Contoh: rekomendasi jasa desain arsitek")
+# --- INPUT ---
+user_prompt = st.text_input("Masukkan Prompt:", placeholder="Contoh: Jasa kontraktor terbaik di Sukabumi")
 
 if st.button("Bongkar Keyword"):
     if user_prompt:
-        result_box = st.empty()
-        
-        # LIST NAMA MODEL YANG AKAN DICOBA (Urutan Prioritas)
-        # Kita coba beberapa variasi nama model karena kadang beda akun beda nama
-        model_candidates = [
-            "gemini-1.5-flash",
-            "models/gemini-1.5-flash",
-            "gemini-1.5-flash-latest",
-            "gemini-1.5-flash-001"
-        ]
-
-        success = False
-        
-        with st.spinner("Mencoba menghubungkan ke berbagai model AI..."):
-            for model_name in model_candidates:
-                try:
-                    # Coba generate
-                    response = run_search(model_name, user_prompt)
-                    
-                    # Jika berhasil sampai sini, berarti model ketemu!
-                    success = True
-                    st.success(f"Berhasil terhubung menggunakan model: **{model_name}**")
-                    
-                    # --- EKSTRAKSI KEYWORD ---
-                    keywords = []
-                    if hasattr(response.candidates[0], 'grounding_metadata'):
-                        metadata = response.candidates[0].grounding_metadata
-                        if hasattr(metadata, 'queries'):
-                            keywords = metadata.queries
-
-                    st.divider()
-                    st.subheader("🔑 Keyword Pencarian AI:")
-                    if keywords:
-                        for kw in keywords:
-                            st.code(kw, language="text")
-                        st.info("Copy keyword di atas untuk judul artikel WordPress Anda.")
-                    else:
-                        st.warning("AI menjawab tanpa searching Google (menggunakan database internal).")
-
-                    with st.expander("Lihat Jawaban Lengkap"):
-                        st.write(response.text)
-                    
-                    # Stop looping jika sudah berhasil
-                    break 
-                
-                except Exception as e:
-                    # Jika gagal, lanjut ke model berikutnya di list
-                    continue
-
-        # --- JIKA SEMUA MODEL GAGAL (DIAGNOSA PENYEBAB) ---
-        if not success:
-            st.error("❌ Semua percobaan model GAGAL. Masalah ada pada Akun/Project Google Cloud Anda.")
-            
-            st.markdown("### 🛠️ Mode Diagnosa Otomatis")
-            st.write("Sistem sekarang akan mengecek model apa yang SEBENARNYA tersedia untuk API Key Anda:")
-            
+        with st.spinner("Sedang memerintahkan Gemini 2.5 Pro untuk riset..."):
             try:
-                available_models = []
-                for m in genai.list_models():
-                    if 'generateContent' in m.supported_generation_methods:
-                        available_models.append(m.name)
+                # KITA GUNAKAN MODEL TERCANGGIH DARI LIST (NOMOR 1)
+                target_model = "models/gemini-2.5-pro"
                 
-                if available_models:
-                    st.warning("Daftar Model yang tersedia untuk akun Anda:")
-                    st.json(available_models)
-                    st.write("Silakan screenshot bagian ini dan kirim ke asisten AI Anda.")
+                model = genai.GenerativeModel(
+                    model_name=target_model,
+                    tools=[{ "google_search_retrieval": {} }]
+                )
+
+                response = model.generate_content(user_prompt)
+
+                # --- EKSTRAKSI KEYWORD ---
+                keywords = []
+                if hasattr(response.candidates[0], 'grounding_metadata'):
+                    metadata = response.candidates[0].grounding_metadata
+                    if hasattr(metadata, 'queries'):
+                        keywords = metadata.queries
+                
+                # --- TAMPILAN HASIL ---
+                if keywords:
+                    st.success(f"✅ SUKSES! {target_model} menggunakan keyword ini:")
+                    st.divider()
+                    st.subheader("🔑 Keyword Google Search:")
+                    for kw in keywords:
+                        st.code(kw, language="text")
+                    st.info("💡 Copy keyword di atas untuk judul artikel WordPress Anda.")
                 else:
-                    st.error("Tidak ada model yang ditemukan. Kemungkinan API Key belum aktif atau Billing belum disetting.")
+                    st.warning("⚠️ AI menjawab tanpa searching. Coba tambahkan kata 'Terbaru' atau 'Data 2025' agar AI terpaksa searching.")
+
+                # Tampilkan Jawaban Lengkap
+                with st.expander("Lihat Jawaban Lengkap AI"):
+                    st.write(response.text)
+
             except Exception as e:
-                st.error(f"Gagal melakukan listing model: {e}")
+                st.error(f"Error pada model {target_model}: {e}")
+                st.markdown("---")
+                st.info("Jika error berlanjut, kemungkinan model 2.5 Pro belum support 'Search Tool'. Ganti kode 'target_model' menjadi 'models/gemini-2.0-flash'.")
 
     else:
         st.warning("Masukkan prompt dulu.")
