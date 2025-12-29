@@ -1,55 +1,87 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
+from duckduckgo_search import DDGS
 
-# --- KONFIGURASI API KEY ---
-API_KEY = "AIzaSyBPSwC_5KKiZP2ocxU7Q-gkqarbCsTvqLs"
-genai.configure(api_key=API_KEY)
+# --- KONFIGURASI HALAMAN ---
+st.set_page_config(page_title="Llama 3 SEO Hunter", page_icon="🦙")
 
-# --- SETTING HALAMAN ---
-st.set_page_config(page_title="AI Search Lite", page_icon="🍃")
-st.title("🍃 AI Keyword Insight (Versi Hemat)")
-st.markdown("Menggunakan **Gemini 2.0 Flash Lite**. Versi paling ringan, cepat, dan anti-limit.")
-
-# --- INPUT ---
-user_prompt = st.text_input("Masukkan Prompt:", placeholder="Contoh: Jasa kontraktor terbaik di Sukabumi")
-
-if st.button("Bongkar Keyword"):
-    if user_prompt:
-        with st.spinner("Sedang mencari data dengan mode hemat..."):
-            try:
-                # KITA GUNAKAN VERSI LITE (Sesuai List No. 8 di Screenshot Anda)
-                target_model = "models/gemini-2.0-flash-lite-preview-02-05"
-                
-                model = genai.GenerativeModel(
-                    model_name=target_model,
-                    tools=[{ "google_search_retrieval": {} }]
-                )
-
-                response = model.generate_content(user_prompt)
-
-                # --- EKSTRAKSI KEYWORD ---
-                keywords = []
-                if hasattr(response.candidates[0], 'grounding_metadata'):
-                    metadata = response.candidates[0].grounding_metadata
-                    if hasattr(metadata, 'queries'):
-                        keywords = metadata.queries
-                
-                # --- TAMPILAN HASIL ---
-                if keywords:
-                    st.success("✅ BERHASIL! Keyword ditemukan:")
-                    for kw in keywords:
-                        st.code(kw, language="text")
-                    st.caption("Copy keyword di atas untuk SEO WordPress Anda.")
-                else:
-                    st.warning("⚠️ AI menjawab tanpa searching. Coba prompt: 'Carikan berita terbaru tentang...'")
-
-                with st.expander("Lihat Jawaban AI"):
-                    st.write(response.text)
-
-            except Exception as e:
-                st.error(f"Error: {e}")
-                st.markdown("---")
-                st.error("JIKA MASIH ERROR 429: Berarti kuota Akun Google Anda benar-benar habis total hari ini. Solusi: Buat API Key baru di Akun Google (Gmail) yang berbeda.")
-
+# --- AMBIL API KEY DARI SECRETS (BRANKAS) ---
+try:
+    if "GROQ_API_KEY" in st.secrets:
+        api_key = st.secrets["GROQ_API_KEY"]
     else:
-        st.warning("Prompt masih kosong.")
+        st.error("⚠️ API Key belum dimasukkan di Streamlit Secrets.")
+        st.stop()
+except Exception as e:
+    st.error(f"Terjadi kesalahan saat membaca Secrets: {e}")
+    st.stop()
+
+# --- JUDUL & DESKRIPSI ---
+st.title("🦙 Llama 3 Keyword Hunter")
+st.markdown("""
+**Mesin:** Llama 3 (via Groq) + DuckDuckGo.
+**Status:** ✅ Aman, Cepat, Gratis, Tanpa Limit Google.
+""")
+
+# --- FUNGSI UTAMA ---
+def get_keywords_from_groq(prompt, key):
+    client = Groq(api_key=key)
+    
+    system_instruction = """
+    Kamu adalah pakar SEO Keyword Research.
+    Tugas: Berikan 5 ide keyword 'long-tail' yang spesifik dan volume tinggi untuk topik user.
+    Format Output: HANYA daftar keyword dipisahkan koma. Tanpa teks lain.
+    Contoh: jasa arsitek murah, desain rumah minimalis 2025, kontraktor terpercaya
+    """
+
+    completion = client.chat.completions.create(
+        model="llama3-70b-8192",
+        messages=[
+            {"role": "system", "content": system_instruction},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.6,
+    )
+    return completion.choices[0].message.content
+
+# --- INPUT USER ---
+user_prompt = st.text_input("Masukkan Topik Bisnis:", placeholder="Contoh: Jasa cuci sepatu di Jakarta Selatan")
+
+if st.button("🚀 Cari Keyword & Data"):
+    if user_prompt:
+        try:
+            # 1. TAHAP AI (GROQ)
+            with st.spinner("🦙 Llama 3 sedang berpikir..."):
+                keywords_raw = get_keywords_from_groq(user_prompt, api_key)
+                keyword_list = [k.strip() for k in keywords_raw.split(',')]
+            
+            # Tampilkan Keyword
+            st.success("✅ Keyword SEO Ditemukan!")
+            cols = st.columns(len(keyword_list[:3]))
+            for i, kw in enumerate(keyword_list[:3]):
+                with cols[i]:
+                    st.code(kw, language="text")
+            
+            if len(keyword_list) > 3:
+                st.caption("Alternatif: " + ", ".join(keyword_list[3:]))
+
+            # 2. TAHAP SEARCH (DUCKDUCKGO)
+            st.divider()
+            target_kw = keyword_list[0]
+            st.subheader(f"🌐 Data Kompetitor: {target_kw}")
+            
+            with st.spinner("🔍 Sedang mencari data di internet..."):
+                results = DDGS().text(target_kw, region="id-id", safesearch="off", max_results=4)
+                
+                if results:
+                    for res in results:
+                        with st.expander(res['title'], expanded=True):
+                            st.write(res['body'])
+                            st.markdown(f"[Kunjungi Website]({res['href']})")
+                else:
+                    st.warning("Data tidak ditemukan di pencarian.")
+
+        except Exception as e:
+            st.error(f"Error: {e}")
+    else:
+        st.warning("Masukkan topik dulu bosku.")
