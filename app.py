@@ -1,90 +1,100 @@
 import streamlit as st
-from groq import Groq
+from openai import OpenAI
 from duckduckgo_search import DDGS
 
-# --- CONFIG ---
-st.set_page_config(page_title="Deep AI Search Logic", page_icon="🧬")
+# --- SETUP ---
+st.set_page_config(page_title="Real GPT-4o Logic", page_icon="🧠")
 
-# --- SECRETS ---
+# --- AMBIL API KEY (VERSI OPENAI) ---
 try:
-    if "GROQ_API_KEY" in st.secrets:
-        api_key = st.secrets["GROQ_API_KEY"]
+    if "OPENAI_API_KEY" in st.secrets:
+        # Kita pakai kunci dari Secrets
+        client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
     else:
-        st.error("⚠️ API Key hilang.")
+        st.error("⚠️ OpenAI API Key belum dimasukkan di Streamlit Secrets.")
         st.stop()
-except Exception:
+except Exception as e:
+    st.error(f"Error Konfigurasi: {e}")
     st.stop()
 
-# --- FUNGSI OTAK (DECOMPOSITION LOGIC) ---
-def get_real_backend_queries(user_input, key):
-    client = Groq(api_key=key)
-    
-    # SYSTEM PROMPT LEVEL DEWA
-    # Kita menyuruh AI bertindak sebagai "Query Understanding Module"
-    # Bukan sekadar penerjemah, tapi pemecah masalah.
+# --- FUNGSI UTAMA (GPT-4o BRAIN) ---
+def get_gpt_thought(user_input):
+    # SYSTEM PROMPT: RAW LOGIC
+    # Kita minta GPT-4o untuk jujur: Keyword apa yang dia butuhkan?
     system_instruction = """
-    ROLE: You are the 'Multi-Hop Query Generator' for a Search Engine.
+    You are the search module of GPT-4o.
+    User Input: "{user_input}"
     
-    TASK: 
-    The user asks a question. You need to break it down into 3 DISTINCT search types to get a complete answer.
-    Do NOT just translate. Think about WHERE the data lives.
+    Task: 
+    To answer this user strictly and accurately, determine the BEST Google Search Query.
     
-    GENERATE 3 QUERIES (Comma Separated):
-    1. **Broad Authority Search (English):** Search for "Best/Top" lists or general knowledge. Usually in English for better data.
-    2. **Specific Local Search (Local Language):** Search for specific price, location, or local intent. Keep it in the user's language.
-    3. **Footprint/Platform Search:** Search specifically on platforms like 'site:instagram.com', 'site:linkedin.com', or 'reviews'.
+    Constraints:
+    1. Do not try to be helpful to the user yet. focus on retrieving data.
+    2. Choose the language (English vs Indonesian) based on where the best data resides.
     
-    EXAMPLE INPUT: "Jasa desain rumah di Sukabumi"
-    EXAMPLE OUTPUT: best architecture firms sukabumi indonesia, biaya jasa arsitek sukabumi 2025, site:instagram.com arsitek sukabumi project
-    
-    OUTPUT FORMAT: Just the 3 query strings separated by comma. No labels.
+    Output Format:
+    Reasoning: [Short reason why you chose this query]
+    Query: [The exact search string]
     """
 
-    completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+    response = client.chat.completions.create(
+        model="gpt-4o", # MODEL ASLI CHATGPT (Paling Cerdas)
         messages=[
-            {"role": "system", "content": system_instruction},
-            {"role": "user", "content": user_input}
+            {"role": "system", "content": system_instruction.format(user_input=user_input)},
         ],
-        temperature=0.4, # Sedikit kreatif untuk memikirkan variasi
+        temperature=0, # Murni logika, nol kreativitas
     )
-    return completion.choices[0].message.content
+    return response.choices[0].message.content
 
 # --- UI ---
-st.title("🧬 Deep AI Search Logic (Decomposition)")
+st.title("🧠 Real GPT-4o Search Logic")
 st.markdown("""
-**Ini adalah simulasi yang lebih Real.**
-AI asli tidak hanya mencari 1 kata kunci. Mereka memecah pencarian menjadi 3 jenis data:
-1. **Otoritas Global** (Biasanya Inggris)
-2. **Intent Lokal** (Bahasa Lokal/Harga)
-3. **Jejak Digital** (Instagram/Review/Forum)
+**Mesin:** OpenAI GPT-4o (Asli).
+Ini adalah simulasi paling akurat karena menggunakan otak yang sama dengan ChatGPT Plus.
+Lihat bagaimana dia memutuskan keyword pencariannya.
 """)
 
-user_prompt = st.text_input("Prompt User:", placeholder="Misal: rekomendasi catering diet di jakarta selatan")
+user_prompt = st.text_input("Prompt User:", placeholder="Contoh: ide konten tiktok untuk jualan baju")
 
-if st.button("🧬 Bongkar Logika AI"):
+if st.button("🔴 Bongkar Pikiran ChatGPT"):
     if user_prompt:
-        with st.spinner("Mengurai logika pencarian..."):
-            queries_raw = get_real_backend_queries(user_prompt, api_key)
-            query_list = [q.strip() for q in queries_raw.split(',')]
+        try:
+            with st.spinner("Menghubungi Server OpenAI (GPT-4o)..."):
+                # Ambil respon asli
+                raw_response = get_gpt_thought(user_prompt)
+                
+                # Parsing
+                lines = raw_response.split('\n')
+                reasoning = "N/A"
+                query = user_prompt
+                
+                for line in lines:
+                    if "Reasoning:" in line:
+                        reasoning = line.replace("Reasoning:", "").strip()
+                    if "Query:" in line:
+                        query = line.replace("Query:", "").strip().replace('"', '')
+
+            # HASIL
+            st.success("✅ Keputusan GPT-4o:")
             
-            st.success("✅ AI Memecah Strategi Menjadi 3 Arah:")
+            st.write("**Alasan (Reasoning):**")
+            st.info(reasoning)
             
-            # Kita mapping manual agar user paham maksudnya
-            labels = ["🌍 1. Pencarian Otoritas (Global/Inggris)", "🇮🇩 2. Pencarian Spesifik (Lokal)", "👣 3. Pencarian Jejak (Platform/Review)"]
+            st.write("**Keyword yang dicari (Query):**")
+            st.code(query, language="text")
             
-            for i, q in enumerate(query_list):
-                if i < 3:
-                    st.markdown(f"**{labels[i]}**")
-                    st.code(q, language="text")
-            
-            # Tes salah satu
+            # CEK GOOGLE (via DuckDuckGo)
             st.divider()
-            target_kw = query_list[0] # Kita ambil yang Global/Inggris biasanya paling relevan buat AI
-            st.write(f"Mari kita lihat hasil untuk query otoritas: **{target_kw}**")
+            st.caption(f"Hasil pencarian nyata untuk: {query}")
+            results = DDGS().text(query, region="wt-wt", safesearch="off", max_results=3)
             
-            results = DDGS().text(target_kw, region="wt-wt", safesearch="off", max_results=3)
-            for res in results:
-                with st.expander(res['title'], expanded=True):
-                    st.caption(res['href'])
+            if results:
+                for res in results:
+                    st.markdown(f"**[{res['title']}]({res['href']})**")
                     st.write(res['body'])
+                    st.markdown("---")
+            else:
+                st.warning("Tidak ada hasil search.")
+
+        except Exception as e:
+            st.error(f"Error: {e}")
