@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 
 # --- KONFIGURASI API KEY ---
-API_KEY = "AIzaSyDOSXR9-WF-quua7OS5_Xa1S6sY8fYpOQk"
+API_KEY = "AIzaSyBPSwC_5KKiZP2ocxU7Q-gkqarbCsTvqLs"
 genai.configure(api_key=API_KEY)
 
 # --- SETTING HALAMAN ---
