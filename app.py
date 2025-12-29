@@ -2,98 +2,89 @@ import streamlit as st
 from groq import Groq
 from duckduckgo_search import DDGS
 
-# --- KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="Real AI Search Log", page_icon="⚙️")
+# --- CONFIG ---
+st.set_page_config(page_title="Deep AI Search Logic", page_icon="🧬")
 
-# --- AMBIL API KEY ---
+# --- SECRETS ---
 try:
     if "GROQ_API_KEY" in st.secrets:
         api_key = st.secrets["GROQ_API_KEY"]
     else:
-        st.error("⚠️ API Key belum dimasukkan di Streamlit Secrets.")
+        st.error("⚠️ API Key hilang.")
         st.stop()
-except Exception as e:
-    st.error(f"Error Secrets: {e}")
+except Exception:
     st.stop()
 
-# --- HEADER ---
-st.title("⚙️ AI Backend Search Log")
-st.markdown("""
-**Status:** Mode "Raw Intelligence".
-Script ini meniru perilaku asli LLM Besar (Gemini/GPT). 
-Meskipun Prompt Anda **Bahasa Indonesia**, AI seringkali melakukan searching dalam **Bahasa Inggris** karena database global jauh lebih lengkap. Inilah keyword "rahasia" yang mereka pakai.
-""")
-
-# --- FUNGSI UTAMA (LOGIKA AI ASLI) ---
-def get_ai_search_queries(user_input, key):
+# --- FUNGSI OTAK (DECOMPOSITION LOGIC) ---
+def get_real_backend_queries(user_input, key):
     client = Groq(api_key=key)
     
-    # SYSTEM PROMPT: MEMAKSA AI MENGGUNAKAN LOGIKA DATABASE GLOBAL
+    # SYSTEM PROMPT LEVEL DEWA
+    # Kita menyuruh AI bertindak sebagai "Query Understanding Module"
+    # Bukan sekadar penerjemah, tapi pemecah masalah.
     system_instruction = """
-    ROLE: You are the internal "Search Retrieval System" of a Super-Intelligent AI.
+    ROLE: You are the 'Multi-Hop Query Generator' for a Search Engine.
     
-    CONTEXT: 
-    The user gives a prompt in their local language (e.g., Indonesian).
-    However, as an AI, you know that the BEST and MOST COMPLETE information is usually found in ENGLISH sources.
+    TASK: 
+    The user asks a question. You need to break it down into 3 DISTINCT search types to get a complete answer.
+    Do NOT just translate. Think about WHERE the data lives.
     
-    YOUR TASK:
-    Generate 3-5 Google Search Queries to answer the user's prompt.
+    GENERATE 3 QUERIES (Comma Separated):
+    1. **Broad Authority Search (English):** Search for "Best/Top" lists or general knowledge. Usually in English for better data.
+    2. **Specific Local Search (Local Language):** Search for specific price, location, or local intent. Keep it in the user's language.
+    3. **Footprint/Platform Search:** Search specifically on platforms like 'site:instagram.com', 'site:linkedin.com', or 'reviews'.
     
-    CRITICAL RULE (THE "REAL" AI BEHAVIOR):
-    Even if the user asks in INDONESIAN, you should usually convert the search queries into ENGLISH to get the best global results. 
-    (Or use a mix of English and Local Language if it's a very specific local location).
+    EXAMPLE INPUT: "Jasa desain rumah di Sukabumi"
+    EXAMPLE OUTPUT: best architecture firms sukabumi indonesia, biaya jasa arsitek sukabumi 2025, site:instagram.com arsitek sukabumi project
     
-    OUTPUT FORMAT:
-    Just the keywords/queries separated by comma. No other text.
+    OUTPUT FORMAT: Just the 3 query strings separated by comma. No labels.
     """
 
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
             {"role": "system", "content": system_instruction},
-            {"role": "user", "content": f"User Prompt: '{user_input}'. Generate English/Global search queries for this."}
+            {"role": "user", "content": user_input}
         ],
-        temperature=0.3, 
+        temperature=0.4, # Sedikit kreatif untuk memikirkan variasi
     )
     return completion.choices[0].message.content
 
-# --- INPUT USER ---
-user_prompt = st.text_input("Masukkan Prompt Bahasa Indonesia:", placeholder="Contoh: cara mengobati sakit gigi alami")
+# --- UI ---
+st.title("🧬 Deep AI Search Logic (Decomposition)")
+st.markdown("""
+**Ini adalah simulasi yang lebih Real.**
+AI asli tidak hanya mencari 1 kata kunci. Mereka memecah pencarian menjadi 3 jenis data:
+1. **Otoritas Global** (Biasanya Inggris)
+2. **Intent Lokal** (Bahasa Lokal/Harga)
+3. **Jejak Digital** (Instagram/Review/Forum)
+""")
 
-if st.button("🔓 Bongkar Query Asli AI"):
+user_prompt = st.text_input("Prompt User:", placeholder="Misal: rekomendasi catering diet di jakarta selatan")
+
+if st.button("🧬 Bongkar Logika AI"):
     if user_prompt:
-        try:
-            # 1. TAHAP AI BERPIKIR (LOGIKA GLOBAL)
-            with st.spinner("⚙️ Mengakses otak AI (Translating to Global Context)..."):
-                queries_raw = get_ai_search_queries(user_prompt, api_key)
-                
-                clean_queries = queries_raw.replace('"', '').replace("'", "").split(',')
-                query_list = [q.strip() for q in clean_queries if q.strip()]
+        with st.spinner("Mengurai logika pencarian..."):
+            queries_raw = get_real_backend_queries(user_prompt, api_key)
+            query_list = [q.strip() for q in queries_raw.split(',')]
             
-            # 2. TAMPILKAN HASIL
-            st.success("✅ Keyword Internal AI (Biasanya Bahasa Inggris):")
-            st.write("Ternyata untuk menjawab pertanyaan Anda, AI mencari ini di Google:")
+            st.success("✅ AI Memecah Strategi Menjadi 3 Arah:")
             
-            for kw in query_list:
-                st.code(kw, language="text")
-
-            # 3. CEK SEARCH ENGINE
+            # Kita mapping manual agar user paham maksudnya
+            labels = ["🌍 1. Pencarian Otoritas (Global/Inggris)", "🇮🇩 2. Pencarian Spesifik (Lokal)", "👣 3. Pencarian Jejak (Platform/Review)"]
+            
+            for i, q in enumerate(query_list):
+                if i < 3:
+                    st.markdown(f"**{labels[i]}**")
+                    st.code(q, language="text")
+            
+            # Tes salah satu
             st.divider()
-            primary_query = query_list[0]
-            st.info(f"🌐 Bukti Pencarian untuk: **'{primary_query}'**")
+            target_kw = query_list[0] # Kita ambil yang Global/Inggris biasanya paling relevan buat AI
+            st.write(f"Mari kita lihat hasil untuk query otoritas: **{target_kw}**")
             
-            with st.spinner("Sedang mencari..."):
-                # Kita cari tanpa batasan wilayah (wt-wt) karena keywordnya Inggris
-                results = DDGS().text(primary_query, region="wt-wt", safesearch="off", max_results=3)
-                
-                if results:
-                    for res in results:
-                        with st.container():
-                            st.markdown(f"**[{res['title']}]({res['href']})**")
-                            st.caption(res['body'])
-                            st.markdown("---")
-
-        except Exception as e:
-            st.error(f"Error: {e}")
-    else:
-        st.warning("Masukkan prompt dulu.")
+            results = DDGS().text(target_kw, region="wt-wt", safesearch="off", max_results=3)
+            for res in results:
+                with st.expander(res['title'], expanded=True):
+                    st.caption(res['href'])
+                    st.write(res['body'])
