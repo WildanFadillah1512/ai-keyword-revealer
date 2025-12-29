@@ -1,28 +1,27 @@
 import streamlit as st
-from openai import OpenAI
+from groq import Groq
 from duckduckgo_search import DDGS
 
 # --- SETUP ---
-st.set_page_config(page_title="Real GPT-4o Logic", page_icon="🧠")
+st.set_page_config(page_title="Raw AI Logic (Free)", page_icon="🧠")
 
-# --- AMBIL API KEY (VERSI OPENAI) ---
+# --- AMBIL API KEY (GROQ) ---
 try:
-    if "OPENAI_API_KEY" in st.secrets:
-        # Kita pakai kunci dari Secrets
-        client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+    if "GROQ_API_KEY" in st.secrets:
+        api_key = st.secrets["GROQ_API_KEY"]
+        client = Groq(api_key=api_key)
     else:
-        st.error("⚠️ OpenAI API Key belum dimasukkan di Streamlit Secrets.")
+        st.error("⚠️ GROQ API Key belum dimasukkan di Streamlit Secrets.")
         st.stop()
 except Exception as e:
     st.error(f"Error Konfigurasi: {e}")
     st.stop()
 
-# --- FUNGSI UTAMA (GPT-4o BRAIN) ---
-def get_gpt_thought(user_input):
-    # SYSTEM PROMPT: RAW LOGIC
-    # Kita minta GPT-4o untuk jujur: Keyword apa yang dia butuhkan?
+# --- FUNGSI UTAMA (LLAMA 3.3 RAW LOGIC) ---
+def get_ai_thought(user_input):
+    # SYSTEM PROMPT: RAW LOGIC (Sama persis dengan versi GPT-4o tadi)
     system_instruction = """
-    You are the search module of GPT-4o.
+    You are the search module of a Super Intelligent AI.
     User Input: "{user_input}"
     
     Task: 
@@ -37,33 +36,34 @@ def get_gpt_thought(user_input):
     Query: [The exact search string]
     """
 
+    # Kita pakai Llama 3.3 70B (Model paling pintar di Groq, setara GPT-4)
     response = client.chat.completions.create(
-        model="gpt-4o", # MODEL ASLI CHATGPT (Paling Cerdas)
+        model="llama-3.3-70b-versatile", 
         messages=[
             {"role": "system", "content": system_instruction.format(user_input=user_input)},
         ],
-        temperature=0, # Murni logika, nol kreativitas
+        temperature=0, # Logika Murni (Robot)
     )
     return response.choices[0].message.content
 
 # --- UI ---
-st.title("🧠 Real GPT-4o Search Logic")
+st.title("🧠 AI Search Logic (Raw Llama 3.3)")
 st.markdown("""
-**Mesin:** OpenAI GPT-4o (Asli).
-Ini adalah simulasi paling akurat karena menggunakan otak yang sama dengan ChatGPT Plus.
-Lihat bagaimana dia memutuskan keyword pencariannya.
+**Mesin:** Llama 3.3 70B (via Groq).
+Model ini memiliki kecerdasan setara GPT-4.
+Settingan ini menggunakan **Temperature 0** (Logika Murni) tanpa rekayasa prompt bahasa.
 """)
 
-user_prompt = st.text_input("Prompt User:", placeholder="Contoh: ide konten tiktok untuk jualan baju")
+user_prompt = st.text_input("Prompt User:", placeholder="Contoh: jasa arsitek sukabumi")
 
-if st.button("🔴 Bongkar Pikiran ChatGPT"):
+if st.button("🔴 Bongkar Pikiran AI"):
     if user_prompt:
         try:
-            with st.spinner("Menghubungi Server OpenAI (GPT-4o)..."):
+            with st.spinner("Mengakses Neural Network..."):
                 # Ambil respon asli
-                raw_response = get_gpt_thought(user_prompt)
+                raw_response = get_ai_thought(user_prompt)
                 
-                # Parsing
+                # Parsing Manual
                 lines = raw_response.split('\n')
                 reasoning = "N/A"
                 query = user_prompt
@@ -75,7 +75,7 @@ if st.button("🔴 Bongkar Pikiran ChatGPT"):
                         query = line.replace("Query:", "").strip().replace('"', '')
 
             # HASIL
-            st.success("✅ Keputusan GPT-4o:")
+            st.success("✅ Keputusan Algoritma:")
             
             st.write("**Alasan (Reasoning):**")
             st.info(reasoning)
@@ -83,9 +83,10 @@ if st.button("🔴 Bongkar Pikiran ChatGPT"):
             st.write("**Keyword yang dicari (Query):**")
             st.code(query, language="text")
             
-            # CEK GOOGLE (via DuckDuckGo)
+            # CEK SEARCH ENGINE
             st.divider()
             st.caption(f"Hasil pencarian nyata untuk: {query}")
+            # Region kita set 'wt-wt' (World) biar adil kalau keyword inggris
             results = DDGS().text(query, region="wt-wt", safesearch="off", max_results=3)
             
             if results:
