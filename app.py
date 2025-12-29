@@ -3,7 +3,7 @@ from groq import Groq
 from duckduckgo_search import DDGS
 
 # --- KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="Llama 3 SEO Hunter", page_icon="🦙")
+st.set_page_config(page_title="Llama 3.3 SEO Hunter", page_icon="🦙")
 
 # --- AMBIL API KEY DARI SECRETS (BRANKAS) ---
 try:
@@ -17,10 +17,10 @@ except Exception as e:
     st.stop()
 
 # --- JUDUL & DESKRIPSI ---
-st.title("🦙 Llama 3 Keyword Hunter")
+st.title("🦙 Llama 3.3 Keyword Hunter")
 st.markdown("""
-**Mesin:** Llama 3 (via Groq) + DuckDuckGo.
-**Status:** ✅ Aman, Cepat, Gratis, Tanpa Limit Google.
+**Mesin:** Llama 3.3 (Versi Terbaru) + DuckDuckGo.
+**Status:** ✅ Aman, Super Cepat, & Gratis.
 """)
 
 # --- FUNGSI UTAMA ---
@@ -35,7 +35,8 @@ def get_keywords_from_groq(prompt, key):
     """
 
     completion = client.chat.completions.create(
-        model="llama3-70b-8192",
+        # --- UPDATE: KITA PAKAI MODEL TERBARU (Llama 3.3 Versatile) ---
+        model="llama-3.3-70b-versatile", 
         messages=[
             {"role": "system", "content": system_instruction},
             {"role": "user", "content": prompt}
@@ -51,7 +52,7 @@ if st.button("🚀 Cari Keyword & Data"):
     if user_prompt:
         try:
             # 1. TAHAP AI (GROQ)
-            with st.spinner("🦙 Llama 3 sedang berpikir..."):
+            with st.spinner("🦙 Llama 3.3 sedang berpikir..."):
                 keywords_raw = get_keywords_from_groq(user_prompt, api_key)
                 keyword_list = [k.strip() for k in keywords_raw.split(',')]
             
