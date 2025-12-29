@@ -6,23 +6,19 @@ API_KEY = "AIzaSyDOSXR9-WF-quua7OS5_Xa1S6sY8fYpOQk"
 genai.configure(api_key=API_KEY)
 
 # --- SETTING HALAMAN ---
-st.set_page_config(page_title="AI Search Revealer", page_icon="⚡")
-st.title("⚡ AI Keyword Insight (Gemini 2.0 Flash)")
-st.markdown("""
-Menggunakan model **Gemini 2.0 Flash** - Model terbaru yang Cepat & Efisien.
-Stabil untuk riset keyword tanpa takut kuota cepat habis.
-""")
+st.set_page_config(page_title="AI Search Lite", page_icon="🍃")
+st.title("🍃 AI Keyword Insight (Versi Hemat)")
+st.markdown("Menggunakan **Gemini 2.0 Flash Lite**. Versi paling ringan, cepat, dan anti-limit.")
 
 # --- INPUT ---
 user_prompt = st.text_input("Masukkan Prompt:", placeholder="Contoh: Jasa kontraktor terbaik di Sukabumi")
 
 if st.button("Bongkar Keyword"):
     if user_prompt:
-        with st.spinner("Sedang melacak keyword via Gemini 2.0 Flash..."):
+        with st.spinner("Sedang mencari data dengan mode hemat..."):
             try:
-                # KITA GUNAKAN GEMINI 2.0 FLASH (Index No. 3 di list Anda)
-                # Ini adalah pilihan terbaik: Lebih pintar dari 1.5, tapi kuota lega.
-                target_model = "models/gemini-2.0-flash"
+                # KITA GUNAKAN VERSI LITE (Sesuai List No. 8 di Screenshot Anda)
+                target_model = "models/gemini-2.0-flash-lite-preview-02-05"
                 
                 model = genai.GenerativeModel(
                     model_name=target_model,
@@ -40,22 +36,20 @@ if st.button("Bongkar Keyword"):
                 
                 # --- TAMPILAN HASIL ---
                 if keywords:
-                    st.success(f"✅ SUKSES! Model berhasil menangkap keyword pencarian:")
-                    st.divider()
-                    st.subheader("🔑 Keyword Google Search:")
+                    st.success("✅ BERHASIL! Keyword ditemukan:")
                     for kw in keywords:
                         st.code(kw, language="text")
-                    st.info("💡 Tips: Copy keyword ini untuk Judul Artikel (H1) di WordPress.")
+                    st.caption("Copy keyword di atas untuk SEO WordPress Anda.")
                 else:
-                    st.warning("⚠️ AI menjawab tanpa searching. Coba prompt yang lebih 'memancing', misal: 'Cari daftar harga jasa desain...'")
+                    st.warning("⚠️ AI menjawab tanpa searching. Coba prompt: 'Carikan berita terbaru tentang...'")
 
-                # Tampilkan Jawaban Lengkap
-                with st.expander("Lihat Jawaban Lengkap AI"):
+                with st.expander("Lihat Jawaban AI"):
                     st.write(response.text)
 
             except Exception as e:
                 st.error(f"Error: {e}")
-                st.write("Jika muncul error 429 lagi, tunggu 1-2 menit lalu coba lagi (limit per menit).")
+                st.markdown("---")
+                st.error("JIKA MASIH ERROR 429: Berarti kuota Akun Google Anda benar-benar habis total hari ini. Solusi: Buat API Key baru di Akun Google (Gmail) yang berbeda.")
 
     else:
-        st.warning("Masukkan prompt dulu.")
+        st.warning("Prompt masih kosong.")
