@@ -3,82 +3,95 @@ from groq import Groq
 import json
 import time
 
-# --- 1. CONFIGURATION & PAGE SETUP ---
+# --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="Neural Search Interface", 
-    page_icon="💠", 
+    page_title="Neural Core: Chaos vs Order", 
+    page_icon="☢️", 
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ADVANCED CSS STYLING (THE UI MAGIC) ---
+# --- 2. ADVANCED STYLING (CYBERPUNK AESTHETIC) ---
 st.markdown("""
 <style>
-    /* Main Background */
+    /* Background Setup */
     .stApp {
-        background-color: #0e1117;
+        background-color: #050505;
+        color: #e0e0e0;
     }
     
-    /* TERMINAL STYLE (Left Column) */
-    .neural-terminal {
+    /* LEFT COLUMN: CHAOS TERMINAL */
+    .chaos-terminal {
         background-color: #000000;
-        border: 1px solid #333;
-        border-left: 3px solid #00ff41;
-        padding: 15px;
-        border-radius: 5px;
-        font-family: 'Courier New', Courier, monospace;
-        color: #00ff41; /* Hacker Green */
-        font-size: 13px;
-        line-height: 1.4;
-        height: 550px;
-        overflow-y: auto;
-        box-shadow: inset 0 0 10px #000;
-    }
-    
-    /* CARD STYLE (Right Column) */
-    .insight-card {
-        background-color: #1e2530;
-        border: 1px solid #2e3b4e;
+        border: 1px solid #1a1a1a;
+        border-left: 2px solid #00ff41; /* Hacker Green */
         padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        font-family: 'Courier New', Courier, monospace;
+        color: #00ff41; 
+        font-size: 12px;
+        line-height: 1.4;
+        height: 650px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        box-shadow: inset 0 0 30px rgba(0,0,0,0.9);
+        opacity: 0.95;
     }
     
-    .insight-title {
-        color: #a0aab5;
-        font-size: 0.9em;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-        font-weight: 600;
+    /* SCROLLBAR CUSTOMIZATION (Chrome/Safari) */
+    ::-webkit-scrollbar {
+        width: 8px;
+        background: #000;
     }
-    
-    .insight-value {
-        color: #ffffff;
-        font-size: 1.1em;
-        font-weight: 500;
-    }
-    
-    /* KEYWORD BADGES */
-    .kw-badge {
-        display: inline-block;
-        background-color: #2b313e;
-        color: #4fd1c5;
-        padding: 5px 10px;
-        border-radius: 15px;
-        font-size: 0.85em;
-        margin: 3px;
-        border: 1px solid #4fd1c5;
+    ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
     }
 
-    /* INPUT FIELD STYLING */
-    .stTextInput > div > div > input {
-        background-color: #161b22;
-        color: white;
-        border: 1px solid #30363d;
-        border-radius: 8px;
+    /* RIGHT COLUMN: TACTICAL LIST */
+    .tactical-container {
+        height: 650px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 15px;
         padding: 10px;
+    }
+
+    .strategy-card {
+        background: linear-gradient(90deg, #121212 0%, #1e1e1e 100%);
+        border-left: 4px solid #00d2ff; /* Cyber Blue */
+        padding: 15px 20px;
+        border-radius: 4px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        transition: transform 0.2s;
+    }
+    
+    .strategy-card:hover {
+        transform: translateX(5px);
+        border-left: 4px solid #fff;
+    }
+
+    .card-label {
+        font-size: 10px;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 5px;
+    }
+
+    .card-content {
+        font-size: 16px;
+        font-weight: 600;
+        color: #ffffff;
+        font-family: 'Arial', sans-serif;
+    }
+
+    /* INPUT FIELD */
+    .stTextInput > div > div > input {
+        background-color: #0a0a0a;
+        color: #00ff41;
+        border: 1px solid #333;
+        font-family: 'Courier New', monospace;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -93,42 +106,52 @@ try:
 except Exception:
     st.stop()
 
-# --- 4. CORE LOGIC FUNCTIONS ---
+# --- 4. CORE LOGIC ---
 
-def get_raw_consciousness(user_input):
-    """Mendapatkan aliran pikiran mentah tanpa filter"""
+def get_chaos_stream(user_input):
+    """
+    Generate raw, unfiltered neural noise.
+    """
     system_prompt = """
-    ROLE: You are the core search algorithm of a supercomputer.
-    TASK: Analyze the user request. Stream your consciousness strictly.
-    RULES: 
-    1. NO polite intros. NO formatting.
-    2. Dump raw logic about intent, language choice, synonyms, and query variations.
-    3. Mix English/Indonesian freely as you process.
+    You are a raw AI neural network.
+    
+    INSTRUCTION:
+    1. Dump your internal thought process about the user's request.
+    2. NO FORMATTING. NO JSON. NO LISTS. Just a continuous paragraph of text.
+    3. Mix languages (Indonesian/English) freely.
+    4. Critique keywords, brainstorm synonyms, doubt your own logic.
+    5. Be messy, be technical, be raw.
     """
     
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"QUERY: {user_input}"}
+            {"role": "user", "content": f"USER QUERY: {user_input}"}
         ],
-        temperature=0.7,
+        temperature=0.9, # High Chaos
         max_tokens=1500
     )
     return response.choices[0].message.content
 
-def synthesize_insight(raw_text):
-    """Menerjemahkan pikiran mentah menjadi data terstruktur JSON"""
+def distill_strategy(raw_text):
+    """
+    Extract the top 3-5 best keywords from the chaos.
+    """
     system_prompt = """
-    ROLE: Data Analyst.
-    TASK: Extract structured insights from the provided Raw AI Thought Trace.
-    OUTPUT FORMAT: JSON ONLY.
+    You are a Strategic Filter.
+    
+    TASK: Read the raw thought stream provided.
+    GOAL: Extract the top 3 to 5 most effective search queries/sentences based on that analysis.
+    
+    OUTPUT FORMAT: JSON Object containing a list called 'candidates'.
+    Example:
     {
-        "user_intent": "Brief description of what user wants (e.g. Transactional, Informational)",
-        "language_context": "Why did AI choose specific language?",
-        "search_difficulty": "Easy/Medium/Hard",
-        "primary_keywords": ["kw1", "kw2", "kw3", "kw4"],
-        "strategy_note": "One sentence summary of the plan"
+        "candidates": [
+            "jasa arsitek murah di sukabumi",
+            "biaya desain rumah minimalis sukabumi 2024",
+            "daftar arsitek terbaik jawa barat portofolio"
+        ]
     }
     """
     
@@ -138,115 +161,84 @@ def synthesize_insight(raw_text):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": raw_text}
         ],
-        temperature=0,
+        temperature=0.1, # Strict Logic
         response_format={"type": "json_object"}
     )
     return response.choices[0].message.content
 
 # --- 5. UI LAYOUT ---
 
-st.title("💠 Neural Search Engine")
-st.markdown("Interface visualisasi proses berpikir AI: **Logika Mentah vs Analisis Terstruktur**.")
+st.title("☢️ KERNEL DUMP: CHAOS vs ORDER")
 
-# Input Section (Centered and Clean)
+# Input Section
 with st.container():
-    col_in1, col_in2 = st.columns([4, 1])
-    with col_in1:
-        user_query = st.text_input("Input Data / Keyword:", placeholder="contoh: rekomendasi laptop coding murah", label_visibility="collapsed")
-    with col_in2:
-        analyze_btn = st.button("🚀 PROCESS", use_container_width=True)
+    col1, col2 = st.columns([5, 1])
+    with col1:
+        user_query = st.text_input("Injection Prompt:", placeholder="Input raw trigger...", label_visibility="collapsed")
+    with col2:
+        run_btn = st.button("⚡ EXECUTE", use_container_width=True)
 
-# Main Processing Area
-if analyze_btn and user_query:
+if run_btn and user_query:
     
-    # Progress Bar UI Effect
-    progress_bar = st.progress(0)
-    status_text = st.empty()
+    # Progress Simulation
+    progress = st.progress(0)
+    status = st.empty()
     
     try:
-        # STEP 1: RAW THINKING
-        status_text.caption("🔌 Connecting to Neural Core...")
-        progress_bar.progress(20)
-        time.sleep(0.5) # Efek dramatis sedikit
+        # STEP 1: CHAOS GENERATION
+        status.code(">> ACCESSING NEURAL PATHWAYS...", language="bash")
+        progress.progress(20)
+        time.sleep(0.2)
         
-        status_text.caption("🧠 Streaming Consciousness...")
-        raw_trace = get_raw_consciousness(user_query)
-        progress_bar.progress(60)
+        status.code(">> STREAMING RAW CONSCIOUSNESS...", language="bash")
+        raw_stream = get_chaos_stream(user_query)
+        progress.progress(60)
         
-        # STEP 2: SYNTHESIZING
-        status_text.caption("📊 Synthesizing Logic Structure...")
-        structured_data_str = synthesize_insight(raw_trace)
-        structured_data = json.loads(structured_data_str)
-        progress_bar.progress(100)
-        time.sleep(0.3)
-        progress_bar.empty()
-        status_text.empty()
+        # STEP 2: DISTILLATION
+        status.code(">> REFINING STRATEGIC VECTORS...", language="bash")
+        json_res = distill_strategy(raw_stream)
+        refined_data = json.loads(json_res)
+        candidates = refined_data.get("candidates", [])
+        
+        progress.progress(100)
+        time.sleep(0.2)
+        progress.empty()
+        status.empty()
 
-        # --- DUAL COLUMN RESULT ---
-        c_left, c_right = st.columns([1, 1])
+        # --- DUAL VIEW DISPLAY ---
+        c_raw, c_refined = st.columns([1.2, 1])
 
-        # === KOLOM KIRI: RAW TERMINAL ===
-        with c_left:
-            st.subheader("📟 Raw Neural Trace")
+        # LEFT: THE CHAOS
+        with c_raw:
+            st.markdown("### 🧬 UNFILTERED LOG")
             st.markdown(f"""
-            <div class="neural-terminal">
-            > INITIATING SEQUENCE...<br>
-            > INPUT RECEIVED: "{user_query}"<br>
-            > -------------------------<br>
-            {raw_trace.replace(chr(10), '<br>')}
-            <br>> -------------------------<br>
-            > END OF STREAM.
+            <div class="chaos-terminal">
+            > SYSTEM_START<br>
+            > INPUT_RECEIVED: "{user_query}"<br>
+            > ----------------------------------<br>
+            {raw_stream}
+            <br>> ----------------------------------<br>
+            > STREAM_END
             </div>
             """, unsafe_allow_html=True)
 
-        # === KOLOM KANAN: HUMAN INSIGHTS ===
-        with c_right:
-            st.subheader("🛡️ Executive Summary")
+        # RIGHT: THE ORDER
+        with c_refined:
+            st.markdown("### 🎯 OPTIMIZED VECTORS")
             
-            # Card 1: Intent & Difficulty
-            st.markdown(f"""
-            <div class="insight-card">
-                <div style="display: flex; justify-content: space-between;">
-                    <div>
-                        <div class="insight-title">User Intent</div>
-                        <div class="insight-value">🎯 {structured_data.get('user_intent', 'N/A')}</div>
-                    </div>
-                    <div>
-                        <div class="insight-title">Complexity</div>
-                        <div class="insight-value">⚡ {structured_data.get('search_difficulty', 'N/A')}</div>
-                    </div>
+            # Container for the cards
+            st.markdown('<div class="tactical-container">', unsafe_allow_html=True)
+            
+            # Loop to create cards dynamically
+            for i, item in enumerate(candidates):
+                st.markdown(f"""
+                <div class="strategy-card">
+                    <div class="card-label">VECTOR 0{i+1} // PRIORITY HIGH</div>
+                    <div class="card-content">{item}</div>
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
             
-            # Card 2: Context
-            st.markdown(f"""
-            <div class="insight-card">
-                <div class="insight-title">Language Logic</div>
-                <div class="insight-value" style="font-size: 0.95em; color: #d1d5db;">
-                    {structured_data.get('language_context', 'N/A')}
-                </div>
-                <hr style="border-color: #333; margin: 10px 0;">
-                <div class="insight-title">Strategy</div>
-                <div class="insight-value" style="font-size: 0.95em; color: #d1d5db; font-style: italic;">
-                    "{structured_data.get('strategy_note', 'N/A')}"
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Card 3: Keywords
-            st.markdown('<div class="insight-title" style="margin-left: 5px;">GENERATED OPTIMIZED KEYWORDS</div>', unsafe_allow_html=True)
-            
-            # Generate HTML Badges for Keywords
-            keywords_html = ""
-            for kw in structured_data.get('primary_keywords', []):
-                keywords_html += f'<span class="kw-badge">{kw}</span>'
-            
-            st.markdown(f"""
-            <div class="insight-card" style="border: 1px solid #4fd1c5;">
-                {keywords_html}
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
     except Exception as e:
-        st.error(f"System Malfunction: {e}")
+        st.error(f"System Failure: {e}")
