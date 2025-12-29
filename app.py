@@ -49,7 +49,7 @@ st.markdown("""
         background-color: #0a0e14;
         border: 1px solid #334455;
         color: #00eeff;
-        border-radius: 0px; /* Sharp edges */
+        border-radius: 0px; 
     }
     .stTextInput input {
         color: #00eeff !important;
@@ -86,138 +86,64 @@ st.markdown("""
         border-radius: 0px;
         position: relative;
     }
-    .metric-box::after {
-        content: ''; position: absolute; bottom: 0; right: 0;
-        width: 5px; height: 5px; background: #0088cc;
-    }
     .metric-val { font-size: 20px; color: #fff; font-weight: bold; font-family: 'Orbitron'; }
     .metric-lbl { font-size: 10px; color: #557799; letter-spacing: 1px; }
 
     /* PANEL CONTAINERS */
-    .panel-container {
+    .custom-container {
         background: #050608;
         border: 1px solid #1f293a;
         height: 600px;
-        position: relative;
         overflow-y: auto;
-        margin-top: 10px;
-        box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
-    }
-    .panel-container::-webkit-scrollbar { width: 4px; }
-    .panel-container::-webkit-scrollbar-track { background: #000; }
-    .panel-container::-webkit-scrollbar-thumb { background: #004466; }
-    
-    .panel-header {
-        background: linear-gradient(90deg, #0a111a, transparent);
-        padding: 10px 15px;
-        border-bottom: 1px solid #1f293a;
-        font-size: 12px;
-        color: #00eeff;
-        display: flex;
-        justify-content: space-between;
-        font-family: 'Orbitron', sans-serif;
-        letter-spacing: 1px;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        backdrop-filter: blur(5px);
-    }
-
-    /* CHAOS LOG (LEFT) */
-    .chaos-log {
         padding: 20px;
-        font-size: 11px;
+        margin-top: 10px;
+        position: relative;
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #020204; }
+    ::-webkit-scrollbar-thumb { background: #1f293a; }
+
+    /* CHAOS LOG STYLE */
+    .chaos-text {
         color: #00ffaa;
+        font-size: 11px;
         line-height: 1.6;
         opacity: 0.9;
-        font-family: 'Share Tech Mono', monospace;
     }
 
-    /* --- NEW RESULT CARDS DESIGN (CYBERPUNK FILES) --- */
-    .result-grid {
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .cyber-card {
-        background: rgba(10, 20, 30, 0.4);
-        border: 1px solid #334455;
-        padding: 0;
-        position: relative;
-        transition: all 0.3s ease;
-        /* Potongan sudut sci-fi */
-        clip-path: polygon(
-            0 0, 
-            100% 0, 
-            100% 85%, 
-            95% 100%, 
-            0 100%
-        );
-        margin-bottom: 5px;
-    }
-
-    .cyber-card:hover {
-        background: rgba(0, 100, 200, 0.1);
-        border-color: #00eeff;
-        transform: translateX(5px);
-        box-shadow: -5px 0 15px rgba(0, 238, 255, 0.1);
-    }
-
-    .cyber-card::before {
-        /* Garis aksen kiri neon */
-        content: '';
-        position: absolute;
-        top: 0; left: 0;
-        width: 3px; height: 100%;
-        background: #00eeff;
-        opacity: 0.5;
-        transition: 0.3s;
-    }
-    .cyber-card:hover::before {
-        opacity: 1;
-        box-shadow: 0 0 10px #00eeff;
-    }
-
-    .cc-header {
-        background: rgba(0,0,0,0.3);
-        padding: 8px 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #223344;
-    }
-
-    .cc-id {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 10px;
-        color: #00eeff;
-        letter-spacing: 2px;
-    }
-
-    .cc-conf {
-        font-size: 9px;
-        color: #557799;
-        background: #0a0e14;
-        padding: 2px 6px;
-        border: 1px solid #223344;
-    }
-
-    .cc-body {
-        padding: 15px;
-        font-size: 13px;
-        color: #ddeecc;
-        line-height: 1.5;
+    /* --- RESULT CARD STYLING FOR ST.CONTAINER --- */
+    div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlock"] {
+        gap: 1rem; /* Spacing antar card */
     }
     
-    .cc-footer {
-        padding: 5px 15px 10px 15px;
-        font-size: 9px;
-        color: #446677;
-        text-align: right;
-        text-transform: uppercase;
+    .stMarkdown h3 {
+        font-family: 'Orbitron', sans-serif !important;
+        font-size: 14px !important;
+        color: #00eeff !important;
+        margin: 0;
+        padding: 0;
         letter-spacing: 1px;
+    }
+    
+    .stMarkdown p {
+        font-size: 13px !important;
+        color: #ddeecc !important;
+    }
+
+    /* Styling container khusus hasil */
+    .result-card-container {
+        border: 1px solid #334455;
+        background: rgba(10, 20, 30, 0.4);
+        padding: 15px;
+        border-left: 3px solid #0088cc;
+        transition: 0.3s;
+    }
+    .result-card-container:hover {
+        border-left: 3px solid #00eeff;
+        background: rgba(0, 100, 200, 0.1);
+        transform: translateX(5px);
     }
 
 </style>
@@ -248,7 +174,6 @@ def get_chaos_stream(user_input):
     return response.choices[0].message.content
 
 def distill_strategy(raw_text):
-    # --- REQUESTING 3-5 SENTENCES ---
     system_prompt = """
     ROLE: Tactical Extractor.
     TASK: Extract exactly 3 to 5 highly specific, actionable search queries or strategic sentences.
@@ -263,43 +188,29 @@ def distill_strategy(raw_text):
 
 # --- 4. LAYOUT CONSTRUCTION ---
 
-# === SIDEBAR (CONTROLLER) ===
+# === SIDEBAR ===
 with st.sidebar:
     st.markdown('<div class="sidebar-header">/// ORBITAL</div>', unsafe_allow_html=True)
-    
-    st.markdown("PARAMETER INPUT")
     user_query = st.text_input("..", placeholder="Inject Command...", label_visibility="collapsed")
-    
     st.markdown("---")
     st.markdown("SYSTEM SETTINGS")
     temp = st.slider("Chaos Level", 0.0, 1.0, 0.8)
-    
     st.markdown("---")
     run_btn = st.button("INITIALIZE SEQUENCE")
     
     if not run_btn:
-        st.markdown("""
-        <div style='margin-top: 50px; font-size: 10px; color: #445566;'>
-        STATUS: STANDBY<br>
-        UPLINK: SECURE<br>
-        V.3.1.0
-        </div>
-        """, unsafe_allow_html=True)
+        st.info("STATUS: STANDBY // UPLINK: SECURE")
 
 # === MAIN DASHBOARD ===
 
-# 1. TOP METRICS ROW
+# Metrics Row
 m1, m2, m3, m4 = st.columns(4)
-with m1:
-    st.markdown(f'<div class="metric-box"><div class="metric-val">{random.randint(12,25)}ms</div><div class="metric-lbl">LATENCY</div></div>', unsafe_allow_html=True)
-with m2:
-    st.markdown(f'<div class="metric-box"><div class="metric-val">{random.randint(120,500)}TB</div><div class="metric-lbl">UPLINK</div></div>', unsafe_allow_html=True)
-with m3:
-    st.markdown(f'<div class="metric-box"><div class="metric-val">SECURE</div><div class="metric-lbl">PROTOCOL</div></div>', unsafe_allow_html=True)
-with m4:
-    st.markdown(f'<div class="metric-box"><div class="metric-val" style="color:#00ff41">ACTV</div><div class="metric-lbl">STATUS</div></div>', unsafe_allow_html=True)
+with m1: st.markdown(f'<div class="metric-box"><div class="metric-val">{random.randint(12,25)}ms</div><div class="metric-lbl">LATENCY</div></div>', unsafe_allow_html=True)
+with m2: st.markdown(f'<div class="metric-box"><div class="metric-val">{random.randint(120,500)}TB</div><div class="metric-lbl">UPLINK</div></div>', unsafe_allow_html=True)
+with m3: st.markdown(f'<div class="metric-box"><div class="metric-val">SECURE</div><div class="metric-lbl">PROTOCOL</div></div>', unsafe_allow_html=True)
+with m4: st.markdown(f'<div class="metric-box"><div class="metric-val" style="color:#00ff41">ACTV</div><div class="metric-lbl">STATUS</div></div>', unsafe_allow_html=True)
 
-# 2. MAIN SPLIT SCREEN
+# Main Split
 c_chaos, c_results = st.columns([1.2, 1])
 
 if run_btn and user_query:
@@ -312,78 +223,40 @@ if run_btn and user_query:
         except:
             candidates = ["DATA CORRUPTED", "RETRY"]
             
-    # LEFT PANEL: CHAOS
+    # LEFT PANEL: CHAOS (Masih pake HTML container karena teks panjang)
     with c_chaos:
-        st.markdown(f"""
-        <div class="panel-container">
-            <div class="panel-header">
-                <span>/// RAW_STREAM_LOG</span>
-                <span>ID: {random.randint(1000,9999)}</span>
-            </div>
-            <div class="chaos-log">
-                > INCOMING_TRANSMISSION...<br>
-                > DECRYPTING NEURAL LAYERS...<br><br>
-                {raw_stream}
-                <br><br>> END_OF_STREAM
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.caption(f"/// RAW_STREAM_LOG // ID: {random.randint(1000,9999)}")
+        with st.container(height=600, border=True):
+            st.markdown(f'<div class="chaos-text">{raw_stream}</div>', unsafe_allow_html=True)
 
-    # RIGHT PANEL: RESULTS (NEW DESIGN)
+    # RIGHT PANEL: RESULTS (NATIVE STREAMLIT COMPONENT)
     with c_results:
-        # Build the HTML for cards
-        cards_html = ""
-        for i, item in enumerate(candidates):
-            conf = random.randint(92, 99)
-            file_id = f"DAT_{random.randint(10,99)}_{random.randint(100,999)}"
+        st.caption("/// TARGET_ACQUISITION // STATUS: LOCKED")
+        
+        # Container utama dengan scroll
+        with st.container(height=600, border=True):
             
-            cards_html += f"""
-            <div class="cyber-card">
-                <div class="cc-header">
-                    <span class="cc-id">VECTOR_0{i+1}</span>
-                    <span class="cc-conf">CONFIDENCE: {conf}%</span>
-                </div>
-                <div class="cc-body">
-                    {item}
-                </div>
-                <div class="cc-footer">
-                    FILE_ID: {file_id} // READY
-                </div>
-            </div>
-            """
-            
-        st.markdown(f"""
-        <div class="panel-container">
-            <div class="panel-header">
-                <span>/// TARGET_ACQUISITION</span>
-                <span style="color:#00ff41">LOCKED</span>
-            </div>
-            <div class="result-grid">
-                {cards_html}
-            </div>
-             <div style="position: absolute; bottom: 10px; right: 10px; font-size: 120px; color: rgba(0, 238, 255, 0.03); pointer-events: none; font-family: 'Orbitron';">
-                0{len(candidates)}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+            # Loop menggunakan komponen native Streamlit
+            for i, item in enumerate(candidates):
+                conf = random.randint(92, 99)
+                
+                # Ini adalah trick untuk membuat "Card" pakai st.container
+                # CSS class 'result-card-container' akan menarget container ini jika inspect element,
+                # tapi styling basic sudah cukup rapi.
+                with st.container():
+                    st.markdown("---") # Pembatas tipis
+                    c_head, c_conf = st.columns([3, 1])
+                    with c_head:
+                        st.markdown(f"**VECTOR 0{i+1}**")
+                    with c_conf:
+                        st.caption(f"{conf}%")
+                    
+                    st.write(item) # Native write
+                    st.caption(f"FILE_ID: DAT_{random.randint(10,99)} // READY")
 
 else:
     # IDLE STATE
     with c_chaos:
-        st.markdown("""
-        <div class="panel-container" style="display: flex; align-items: center; justify-content: center; opacity: 0.5;">
-            <div style="text-align:center;">
-                <div style="font-size: 40px;">⚠️</div>
-                <div>AWAITING INPUT DATA</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.container(height=600, border=True).markdown("<br><br><center>AWAITING INPUT...</center>", unsafe_allow_html=True)
     with c_results:
-         st.markdown("""
-        <div class="panel-container" style="display: flex; align-items: center; justify-content: center; opacity: 0.5;">
-            <div style="text-align:center;">
-                <div style="font-size: 40px;">🚫</div>
-                <div>NO TARGETS ACQUIRED</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.container(height=600, border=True).markdown("<br><br><center>NO TARGETS</center>", unsafe_allow_html=True)
