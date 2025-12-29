@@ -2,8 +2,17 @@ import streamlit as st
 from groq import Groq
 import json
 
-# --- SETUP ---
-st.set_page_config(page_title="Multi-Step Backend Inspector", page_icon="📡", layout="wide")
+# --- SETUP TAMPILAN ---
+st.set_page_config(page_title="KERNEL LEVEL INSPECTOR", page_icon="☢️", layout="wide")
+
+# --- CSS HACK UNTUK TAMPILAN SEPERTI TERMINAL HACKER ---
+st.markdown("""
+<style>
+    .stApp {background-color: #0e1117;}
+    .stJson {background-color: #1e1e1e; color: #00ff41; font-family: 'Courier New', monospace;}
+    div[data-testid="stMarkdownContainer"] {color: #e6e6e6;}
+</style>
+""", unsafe_allow_html=True)
 
 # --- AMBIL API KEY ---
 try:
@@ -15,41 +24,41 @@ try:
 except Exception:
     st.stop()
 
-# --- FUNGSI GENERATOR JSON (MULTI-STEP LOGIC) ---
-def get_backend_json_multi(user_input):
-    # SYSTEM PROMPT: FORMAT STRICT JSON ARRAY
-    # Kita perintahkan AI untuk memecah masalah menjadi BANYAK query (Unlimited/Sesuai kebutuhan).
+# --- FUNGSI 'BRAIN DUMP' ---
+def get_kernel_dump(user_input):
+    # SYSTEM PROMPT: MEMAKSA MODE 'DEBUG KERNEL'
+    # Kita perintahkan AI untuk tidak menjadi asisten, tapi menjadi mesin pemroses data.
+    # Output WAJIB JSON kompleks yang menunjukkan 'Neural Activation'.
     system_instruction = """
-    You are a Deep Research AI Agent (Headless).
+    ACT AS: Neural Search Engine Backend (Kernel Level).
     
-    YOUR GOAL: 
-    Analyze the user prompt and generate a MULTI-STEP search strategy. 
-    Do not limit yourself to one query. Break the problem down into as many queries as needed (prices, reviews, competitors, location, social proof, etc).
+    TASK: Process the user input and output the RAW INTERNAL EXECUTION LOG in JSON format.
     
-    RULES:
-    1. Output MUST be a valid JSON object.
-    2. The core data must be an ARRAY (List) of search steps.
-    3. Use the user's language logic (if user implies local intent, use local language).
+    CONSTRAINTS:
+    1. NO polite text. NO markdown explanation. ONLY JSON.
+    2. Reveal your internal "confidence_score" (0.0 to 1.0).
+    3. Reveal your "raw_thought_trace" (The unfiltered logic flow).
+    4. Break down the query into "search_vectors".
     
-    JSON STRUCTURE:
+    JSON SCHEMA STRUCTURE:
     {
-      "meta_analysis": {
-        "user_intent": "...",
-        "complexity_level": "..."
+      "timestamp_simulation": "UnixEpoch",
+      "input_processing": {
+        "detected_language": "...",
+        "complexity_assessment": "Low/Medium/High",
+        "ambiguity_check": "..."
       },
-      "search_pipeline": [
-        {
-          "step_id": 1,
-          "strategy": "Broad/Specific/Price/Review",
-          "query": "..."
-        },
-        {
-          "step_id": 2,
-          "strategy": "...",
-          "query": "..."
-        }
-        ... (Add more steps as needed)
-      ]
+      "neural_reasoning": {
+        "raw_thought_trace": "String of consciousness. Explain exactly why you choose specific keywords without filtering.",
+        "confidence_score": 0.95
+      },
+      "execution_plan": {
+        "primary_strategy": "...",
+        "search_vectors": [
+            {"priority": 1, "type": "navigational/transactional", "query_string": "..."},
+            {"priority": 2, "type": "...", "query_string": "..."}
+        ]
+      }
     }
     """
 
@@ -59,51 +68,42 @@ def get_backend_json_multi(user_input):
             {"role": "system", "content": system_instruction},
             {"role": "user", "content": user_input}
         ],
-        temperature=0.2, # Sedikit kreatif agar bisa memecah masalah
-        response_format={"type": "json_object"} 
+        temperature=0.1, # Hampir beku, logika murni
+        response_format={"type": "json_object"} # FORCE JSON
     )
     return response.choices[0].message.content
 
-# --- UI TAMPILAN INSPECT NETWORK ---
-st.title("📡 AI Network Inspector (Multi-Step Payload)")
-st.markdown("""
-**Mode: Deep Decomposition**
-Script ini menampilkan bagaimana AI memecah satu perintah menjadi **banyak permintaan server (Batch Request)**.
-Lihat bagian `search_pipeline` untuk melihat daftar keyword yang ditembakkan secara bersamaan.
-""")
+# --- UI UTAMA ---
+st.title("☢️ AI KERNEL DUMP (Raw Data)")
+st.caption("Melihat langsung struktur data JSON yang dikirim oleh otak AI ke server.")
 
-user_prompt = st.text_input("User Prompt:", placeholder="Contoh: strategi jualan kopi kekinian biar laris")
+user_prompt = st.text_input("Input Data:", placeholder="jasa arsitek sukabumi", value="jasa desain arsitek di sukabumi")
 
-if st.button("🔴 Inspect Network Payload"):
+if st.button("EXECUTE KERNEL TRACE"):
     if user_prompt:
         try:
-            with st.spinner("Analyzing & Decomposing Request..."):
-                # Ambil Raw JSON
-                raw_json_str = get_backend_json_multi(user_prompt)
+            with st.spinner("Decrypting Neural Pathways..."):
+                # Ambil data mentah
+                raw_data = get_kernel_dump(user_prompt)
+                json_data = json.loads(raw_data)
                 
-                # Ubah string jadi Object Python
-                data_object = json.loads(raw_json_str)
+                # TAMPILKAN JSON MENTAH (Ini yang dilihat developer)
+                st.subheader("📡 Backend Payload")
+                st.json(json_data)
                 
-                # 1. TAMPILKAN RAW JSON (UNTUK DEBUGGING)
-                st.subheader("📡 Full Payload Data")
-                st.caption("Ini adalah struktur data lengkap yang dikirim otak AI:")
-                st.json(data_object)
-                
-                # 2. EKSTRAKSI KEYWORD (BIAR GAMPANG DIBACA)
+                # EKSTRAKSI UNTUK MANUSIA
                 st.divider()
-                st.subheader("🔑 Extracted Search Pipeline")
-                st.write("AI memutuskan untuk melakukan pencarian berikut secara paralel:")
+                st.markdown("### 🧠 Analisis Pikiran (Extracted)")
                 
-                # Kita loop array 'search_pipeline'
-                pipeline = data_object.get("search_pipeline", [])
+                trace = json_data['neural_reasoning']['raw_thought_trace']
+                vectors = json_data['execution_plan']['search_vectors']
                 
-                if pipeline:
-                    for item in pipeline:
-                        # Tampilkan strategi dan query
-                        st.markdown(f"**Langkah {item.get('step_id')}: {item.get('strategy')}**")
-                        st.code(item.get('query'), language="text")
-                else:
-                    st.warning("JSON valid, tapi tidak ada pipeline yang ditemukan.")
+                st.write("**Logika Mentah:**")
+                st.code(trace, language="text")
+                
+                st.write("**Keputusan Query Akhir:**")
+                for v in vectors:
+                    st.success(f"Priority {v['priority']} ({v['type']}): {v['query_string']}")
 
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"System Error: {e}")
