@@ -1,11 +1,11 @@
 import streamlit as st
 from groq import Groq
-from duckduckgo_search import DDGS
-import re
+import json
 
 # --- SETUP ---
-st.set_page_config(page_title="Raw AI Consciousness", page_icon="🧠", layout="wide")
+st.set_page_config(page_title="Multi-Step Backend Inspector", page_icon="📡", layout="wide")
 
+# --- AMBIL API KEY ---
 try:
     if "GROQ_API_KEY" in st.secrets:
         client = Groq(api_key=st.secrets["GROQ_API_KEY"])
@@ -15,88 +15,95 @@ try:
 except Exception:
     st.stop()
 
-# --- FUNGSI PIKIRAN MENTAH (UNFILTERED) ---
-def get_raw_stream(user_input):
-    # SYSTEM PROMPT: BEBAS TANPA BATAS
-    # Kita menyuruh AI untuk melakukan "Deep Research Planning".
-    # Tidak ada batasan jumlah query. Biarkan dia membanjiri kita dengan data.
+# --- FUNGSI GENERATOR JSON (MULTI-STEP LOGIC) ---
+def get_backend_json_multi(user_input):
+    # SYSTEM PROMPT: FORMAT STRICT JSON ARRAY
+    # Kita perintahkan AI untuk memecah masalah menjadi BANYAK query (Unlimited/Sesuai kebutuhan).
     system_instruction = """
-    You are an AI Research Engine performing a deep dive analysis.
+    You are a Deep Research AI Agent (Headless).
     
-    USER PROMPT: "{user_input}"
+    YOUR GOAL: 
+    Analyze the user prompt and generate a MULTI-STEP search strategy. 
+    Do not limit yourself to one query. Break the problem down into as many queries as needed (prices, reviews, competitors, location, social proof, etc).
     
-    YOUR GOAL:
-    You need to gather ALL possible information to answer this request perfectly.
-    Don't just look for one thing. Look for prices, reviews, competitors, locations, social proof, Reddit discussions, everything.
+    RULES:
+    1. Output MUST be a valid JSON object.
+    2. The core data must be an ARRAY (List) of search steps.
+    3. Use the user's language logic (if user implies local intent, use local language).
     
-    INSTRUCTION:
-    Dump your raw internal search plan. 
-    List EVERY SINGLE keyword string you would type into Google. 
-    If you need 10 queries, generate 10. If you need 20, generate 20.
-    
-    FORMAT (STRICTLY ONE PER LINE):
-    >> QUERY: [Your Search String Here]
-    >> QUERY: [Your Search String Here]
-    ...
+    JSON STRUCTURE:
+    {
+      "meta_analysis": {
+        "user_intent": "...",
+        "complexity_level": "..."
+      },
+      "search_pipeline": [
+        {
+          "step_id": 1,
+          "strategy": "Broad/Specific/Price/Review",
+          "query": "..."
+        },
+        {
+          "step_id": 2,
+          "strategy": "...",
+          "query": "..."
+        }
+        ... (Add more steps as needed)
+      ]
+    }
     """
 
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
-            {"role": "system", "content": system_instruction.format(user_input=user_input)},
+            {"role": "system", "content": system_instruction},
+            {"role": "user", "content": user_input}
         ],
-        temperature=0.6, # Sedikit dinaikkan agar AI lebih liar/eksploratif dalam mencari ide
-        max_tokens=1000  # Kita beri ruang luas agar dia tidak terpotong
+        temperature=0.2, # Sedikit kreatif agar bisa memecah masalah
+        response_format={"type": "json_object"} 
     )
     return response.choices[0].message.content
 
-# --- UI ---
-st.title("🧠 AI Unfiltered Consciousness")
+# --- UI TAMPILAN INSPECT NETWORK ---
+st.title("📡 AI Network Inspector (Multi-Step Payload)")
 st.markdown("""
-**Ini adalah Logika Tanpa Filter.**
-Script ini tidak membatasi AI. Jika AI merasa perlu mencari 15 hal berbeda untuk menjawab Anda, dia akan melakukannya.
-Inilah representasi paling akurat dari "Multi-Step Reasoning" yang dilakukan AI canggih.
+**Mode: Deep Decomposition**
+Script ini menampilkan bagaimana AI memecah satu perintah menjadi **banyak permintaan server (Batch Request)**.
+Lihat bagian `search_pipeline` untuk melihat daftar keyword yang ditembakkan secara bersamaan.
 """)
 
-user_prompt = st.text_input("Prompt User:", placeholder="Misal: strategi marketing untuk jualan basreng pedas")
+user_prompt = st.text_input("User Prompt:", placeholder="Contoh: strategi jualan kopi kekinian biar laris")
 
-if st.button("🔴 Buka Pikiran AI"):
+if st.button("🔴 Inspect Network Payload"):
     if user_prompt:
         try:
-            with st.spinner("AI sedang melakukan Deep Thinking..."):
-                # 1. DAPATKAN RAW TEXT
-                raw_text = get_raw_stream(user_prompt)
+            with st.spinner("Analyzing & Decomposing Request..."):
+                # Ambil Raw JSON
+                raw_json_str = get_backend_json_multi(user_prompt)
                 
-                # 2. TAMPILKAN MENTAHNYA (SEPERTI LOG SERVER)
-                st.subheader("📝 Raw Internal Log")
-                st.text_area("Apa yang ada di otak AI:", value=raw_text, height=300)
+                # Ubah string jadi Object Python
+                data_object = json.loads(raw_json_str)
                 
-                # 3. EKSTRAKSI QUERY (Untuk pembuktian)
-                # Kita cari semua baris yang diawali ">> QUERY:"
-                queries = re.findall(r">> QUERY: (.*)", raw_text)
+                # 1. TAMPILKAN RAW JSON (UNTUK DEBUGGING)
+                st.subheader("📡 Full Payload Data")
+                st.caption("Ini adalah struktur data lengkap yang dikirim otak AI:")
+                st.json(data_object)
                 
-                if queries:
-                    st.success(f"✅ AI Memutuskan untuk melakukan {len(queries)} pencarian sekaligus!")
-                    
-                    # Tampilkan list bersih
-                    st.write("Daftar Keyword yang dipakai:")
-                    for q in queries:
-                        st.code(q.strip(), language="text")
-                    
-                    # 4. SIMULASI PENCARIAN (Ambil 3 Teratas saja biar tidak berat)
-                    st.divider()
-                    st.write(f"🔎 Mengambil sampel data untuk 3 query pertama...")
-                    
-                    for i, q in enumerate(queries[:3]):
-                        clean_q = q.strip()
-                        st.markdown(f"**Mencari: `{clean_q}`**")
-                        results = DDGS().text(clean_q, region="wt-wt", safesearch="off", max_results=2)
-                        for res in results:
-                            with st.expander(f"Hasil: {res['title']}"):
-                                st.caption(res['href'])
-                                st.write(res['body'])
+                # 2. EKSTRAKSI KEYWORD (BIAR GAMPANG DIBACA)
+                st.divider()
+                st.subheader("🔑 Extracted Search Pipeline")
+                st.write("AI memutuskan untuk melakukan pencarian berikut secara paralel:")
+                
+                # Kita loop array 'search_pipeline'
+                pipeline = data_object.get("search_pipeline", [])
+                
+                if pipeline:
+                    for item in pipeline:
+                        # Tampilkan strategi dan query
+                        st.markdown(f"**Langkah {item.get('step_id')}: {item.get('strategy')}**")
+                        st.code(item.get('query'), language="text")
                 else:
-                    st.warning("AI memberikan respon naratif, bukan list query. Coba prompt yang lebih spesifik.")
+                    st.warning("JSON valid, tapi tidak ada pipeline yang ditemukan.")
 
         except Exception as e:
             st.error(f"Error: {e}")
