@@ -6,238 +6,208 @@ import random
 
 # --- 1. CONFIGURATION ---
 st.set_page_config(
-    page_title="ORBITAL COMMAND V2.1",
-    page_icon="🪐",
+    page_title="ORBITAL COMMAND", 
+    page_icon="🛰️", 
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# --- 2. ADVANCED NEURAL HUD CSS ---
+# --- 2. THE "ORBITAL GRID" CSS ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=JetBrains+Mono:wght@300;500&family=Orbitron:wght@400;900&display=swap');
+    /* IMPORTS */
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
-    :root {
-        --primary: #00ffaa;
-        --secondary: #0088cc;
-        --warning: #ff3300;
-        --bg-dark: #020205;
-        --glass: rgba(10, 15, 25, 0.8);
-        --border: rgba(0, 255, 170, 0.15);
-    }
-
-    /* GLOBAL CANVAS */
+    /* BASE */
     .stApp {
-        background: radial-gradient(circle at 50% 50%, #0a1018 0%, #020205 100%);
+        background-color: #020204;
         color: #aaccff;
-        font-family: 'JetBrains Mono', monospace;
-    }
-
-    header, footer, .stDeployButton {display: none;}
-
-    /* HUD METRIC BAR */
-    .hud-metric-container {
-        display: flex;
-        justify-content: space-between;
-        padding: 10px 20px;
-        background: rgba(0,0,0,0.5);
-        border-bottom: 1px solid var(--border);
-        font-family: 'Syncopate', sans-serif;
-        font-size: 9px;
-        letter-spacing: 2px;
-    }
-
-    /* NEURAL CONTAINER (Kiri) */
-    .neural-panel {
-        background: var(--glass);
-        backdrop-filter: blur(15px);
-        border: 1px solid var(--border);
-        padding: 20px;
-        height: 600px;
-        overflow-y: auto;
-        position: relative;
+        font-family: 'Share Tech Mono', monospace;
     }
     
-    .neural-panel::after {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: linear-gradient(rgba(0,255,170,0.03) 50%, transparent 50%);
-        background-size: 100% 4px;
-        pointer-events: none;
+    /* HIDE DEFAULT UI */
+    header, footer, .stDeployButton {display: none;}
+    div[data-testid="stDecoration"] {display: none;}
+
+    /* --- SIDEBAR STYLING --- */
+    section[data-testid="stSidebar"] {
+        background-color: #050508;
+        border-right: 1px solid #1f293a;
+    }
+    
+    .sidebar-header {
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 900;
+        font-size: 24px;
+        color: #fff;
+        margin-bottom: 30px;
+        text-shadow: 0 0 10px rgba(0, 150, 255, 0.5);
     }
 
-    /* VECTOR SHARDS (Kanan) */
-    .vector-shard {
-        background: rgba(0, 136, 204, 0.05);
-        border: 1px solid rgba(0, 136, 204, 0.2);
-        border-left: 3px solid var(--secondary);
-        padding: 15px;
-        margin-bottom: 12px;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* INPUT FIELD */
+    .stTextInput > div > div {
+        background-color: #0a0e14;
+        border: 1px solid #334455;
+        color: #00eeff;
+        border-radius: 0px; 
     }
-
-    .vector-shard:hover {
-        background: rgba(0, 255, 170, 0.1);
-        border-left: 3px solid var(--primary);
-        transform: translateX(10px);
-        box-shadow: -10px 0 20px rgba(0, 255, 170, 0.1);
-    }
-
-    /* COMMAND INPUT */
     .stTextInput input {
-        background: rgba(0,0,0,0.3) !important;
-        border: 1px solid var(--border) !important;
-        border-radius: 0px !important;
-        color: var(--primary) !important;
-        font-family: 'Orbitron', sans-serif !important;
-        font-size: 18px !important;
-        text-align: center;
-        padding: 20px !important;
+        color: #00eeff !important;
+        font-family: 'Share Tech Mono', monospace;
     }
 
-    /* TERMINAL TEXT */
+    /* BUTTON */
+    .stButton > button {
+        width: 100%;
+        background: rgba(0, 85, 170, 0.2);
+        border: 1px solid #0088cc;
+        color: #00eeff;
+        font-family: 'Orbitron', sans-serif;
+        letter-spacing: 2px;
+        padding: 15px;
+        margin-top: 10px;
+        transition: 0.3s;
+        text-transform: uppercase;
+    }
+    .stButton > button:hover {
+        background: #0088cc;
+        color: #fff;
+        box-shadow: 0 0 20px rgba(0, 136, 204, 0.6);
+    }
+
+    /* --- DASHBOARD GRID --- */
+    .metric-box {
+        background: rgba(0, 20, 30, 0.5);
+        border: 1px solid #1f293a;
+        padding: 10px;
+        text-align: center;
+        border-radius: 0px;
+    }
+    .metric-val { font-size: 20px; color: #fff; font-weight: bold; font-family: 'Orbitron'; }
+    .metric-lbl { font-size: 10px; color: #557799; letter-spacing: 1px; }
+
     .chaos-text {
-        color: var(--primary);
+        color: #00ffaa;
         font-size: 11px;
         line-height: 1.6;
-        opacity: 0.8;
+        opacity: 0.9;
         white-space: pre-wrap;
     }
 
-    .section-label {
-        font-family: 'Syncopate', sans-serif;
-        font-size: 10px;
-        color: var(--secondary);
+    .query-card {
+        background: rgba(0, 255, 170, 0.05);
+        border: 1px solid #1f293a;
+        padding: 10px;
         margin-bottom: 10px;
-        display: block;
-        letter-spacing: 3px;
-    }
-
-    /* SCANLINE ANIMATION */
-    @keyframes scan {
-        0% { transform: translateY(-100%); }
-        100% { transform: translateY(1000%); }
-    }
-    .scanner {
-        position: absolute;
-        width: 100%;
-        height: 2px;
-        background: var(--primary);
-        opacity: 0.1;
-        animation: scan 10s linear infinite;
+        border-left: 2px solid #00ffaa;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. CORE INTELLIGENCE (GROQ) ---
+# --- 3. LOGIC ---
 try:
-    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+    if "GROQ_API_KEY" in st.secrets:
+        client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+    else:
+        st.sidebar.error("⚠️ API Key Missing")
+        st.stop()
 except:
-    st.error("UPLINK FAILED: API_KEY_NOT_FOUND")
     st.stop()
 
-def get_deep_trace(user_input):
-    """Fungsi Logika Kiri: Analisis Mendalam"""
+def get_chaos_stream(user_input):
+    # PROMPT LOGIKA MURNI (Kiri)
     system_prompt = """
     You are a hyper-analytical AI engine performing a Deep Layer Cognition Trace.
-    MANDATORY OUTPUT STRUCTURE:
-    1. Semantic Deconstruction: (tokens, hidden intent)
-    2. Knowledge Retrieval: (theoretical frameworks, related nodes)
-    3. Hypothesis Formation: (interpretations A, B, C)
-    4. Dialectical Analysis: (finding flaws in your own logic)
-    5. Convergence Logic: (synthesis of the final path)
+    Provide an exhaustive, step-by-step, unfiltered breakdown of your reasoning process.
+    Structure:
+    1. Semantic Deconstruction (tokens, intent).
+    2. Knowledge Retrieval (related nodes/concepts).
+    3. Multi-angle Hypothesis Formation.
+    4. Dialectical Analysis (self-critique of hypotheses).
+    5. Convergence Logic.
     
-    STYLE: Clinical, technical, verbose. Show the messy work.
+    STYLE: Clinical, verbose, and purely technical. Show all internal steps.
     """
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_input}],
-        temperature=0.75, max_tokens=2500
+        temperature=0.7,
+        max_tokens=2048
     )
     return response.choices[0].message.content
 
-def distill_shards(trace_text):
-    """Fungsi Logika Kanan: Ekstraksi Kueri Pencarian"""
+def distill_strategy(raw_text):
+    # PROMPT EKSTRAKSI SEARCH QUERY (Kanan)
     system_prompt = """
     ROLE: Intelligence Liaison.
-    TASK: Generate exactly 4 highly optimized "Search Model Queries" for deep research based on the provided trace.
-    OUTPUT: JSON format {"shards": ["query 1", "query 2", "query 3", "query 4"]}
+    TASK: Based on the provided raw cognitive analysis, generate exactly 3 to 5 highly optimized "Search Model Queries".
+    
+    GUIDELINES for Queries:
+    1. They must be designed for deep research (e.g., Google, Perplexity, or Academic search).
+    2. Use advanced operators or specific terminology found in the analysis.
+    3. Each query should target a different "blind spot" or "data need" identified in the reasoning.
+    4. Format: Plain, direct search strings.
+    
+    OUTPUT: JSON format {"candidates": ["query 1", "query 2", "query 3", "query 4", "query 5"]}
     """
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": trace_text}],
-        temperature=0.2, response_format={"type": "json_object"}
+        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": raw_text}],
+        temperature=0.2, 
+        response_format={"type": "json_object"}
     )
-    return json.loads(response.choices[0].message.content).get("shards", [])
+    return response.choices[0].message.content
 
-# --- 4. ORBITAL INTERFACE ---
+# --- 4. LAYOUT ---
 
-# TOP HUD
-st.markdown(f"""
-<div class="hud-metric-container">
-    <div>SYS_STATUS: <span style="color:var(--primary)">ACTIVE</span></div>
-    <div>UPLINK_STRENGTH: {random.randint(85,99)}%</div>
-    <div>NEURAL_LOAD: {random.randint(10,40)}%</div>
-    <div style="color:var(--warning)">COORDINATES: {random.randint(100,999)}LX / {random.randint(100,999)}YT</div>
-</div>
-""", unsafe_allow_html=True)
+# SIDEBAR
+with st.sidebar:
+    st.markdown('<div class="sidebar-header">/// ORBITAL</div>', unsafe_allow_html=True)
+    user_query = st.text_input("..", placeholder="Inject Command...", label_visibility="collapsed")
+    st.markdown("---")
+    run_btn = st.button("INITIALIZE SEQUENCE")
 
-# HEADER
-st.write("<br>", unsafe_allow_html=True)
-c_header = st.columns([1, 2, 1])
-with c_header[1]:
-    st.markdown("<h1 style='text-align: center; font-size: 3.5rem; margin-bottom: 0; font-family:Syncopate;'>ORBITAL</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: var(--secondary); letter-spacing: 12px; font-size: 10px;'>DEEP COGNITION COMMAND</p>", unsafe_allow_html=True)
-    query = st.text_input("CMD", placeholder="INJECT COMMAND SEQUENCE...", label_visibility="collapsed")
-    execute = st.button("INITIALIZE TRACE")
+# METRICS
+m1, m2, m3, m4 = st.columns(4)
+with m1: st.markdown(f'<div class="metric-box"><div class="metric-val">{random.randint(12,25)}ms</div><div class="metric-lbl">LATENCY</div></div>', unsafe_allow_html=True)
+with m2: st.markdown(f'<div class="metric-box"><div class="metric-val">{random.randint(120,500)}TB</div><div class="metric-lbl">UPLINK</div></div>', unsafe_allow_html=True)
+with m3: st.markdown(f'<div class="metric-box"><div class="metric-val">SECURE</div><div class="metric-lbl">PROTOCOL</div></div>', unsafe_allow_html=True)
+with m4: st.markdown(f'<div class="metric-box"><div class="metric-val" style="color:#00ff41">ACTV</div><div class="metric-lbl">STATUS</div></div>', unsafe_allow_html=True)
 
-st.markdown("<div style='margin: 20px 0; border-bottom: 1px solid var(--border);'></div>", unsafe_allow_html=True)
+c_chaos, c_results = st.columns([1.2, 1])
 
-# MAIN DISPLAY
-if execute and query:
-    with st.spinner("PENETRATING NEURAL LAYERS..."):
-        # Processing
-        raw_trace = get_deep_trace(query)
-        shards = distill_shards(raw_trace)
-    
-    col_left, col_right = st.columns([1.4, 1])
-    
-    with col_left:
-        st.markdown("<span class='section-label'>[01] COGNITIVE_RAW_TRACE</span>", unsafe_allow_html=True)
-        st.markdown(f"""
-        <div class="neural-panel">
-            <div class="scanner"></div>
-            <div class="chaos-text">{raw_trace}</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with col_right:
-        st.markdown("<span class='section-label'>[02] OPTIMIZED_SEARCH_SHARDS</span>", unsafe_allow_html=True)
-        with st.container():
-            for i, s in enumerate(shards):
-                st.markdown(f"""
-                <div class="vector-shard">
-                    <div style="font-size: 9px; color: var(--secondary);">VECTOR_ID: 0x00{i+1}</div>
-                    <div style="font-size: 14px; margin-top: 5px; color: #fff;">{s}</div>
-                    <div style="text-align: right; font-size: 8px; margin-top: 8px; color: var(--primary); opacity: 0.5;">READY FOR UPLINK</div>
-                </div>
-                """, unsafe_allow_html=True)
-                if st.button(f"EXECUTE SEARCH 0{i+1}", key=f"btn_{i}"):
-                    st.toast(f"Broadcasting Vector 0{i+1} to Research Engine...")
+if run_btn and user_query:
+    with st.spinner("TRACE IN PROGRESS..."):
+        raw_stream = get_chaos_stream(user_query)
+        json_res = distill_strategy(raw_stream)
+        try:
+            candidates = json.loads(json_res).get("candidates", [])
+        except:
+            candidates = ["ERROR: DECODING_FAILED"]
+
+    # KIRI: PROSES BERPIKIR MURNI
+    with c_chaos:
+        st.caption("/// RAW_COGNITIVE_LOG // DEEP_TRACE_ACTIVE")
+        with st.container(height=600, border=True):
+            st.markdown(f'<div class="chaos-text">{raw_stream}</div>', unsafe_allow_html=True)
+
+    # KANAN: OPTIMIZED SEARCH QUERIES
+    with c_results:
+        st.caption("/// SEARCH_MODEL_QUERIES // TARGET_ACQUISITION")
+        with st.container(height=600, border=True):
+            for i, item in enumerate(candidates):
+                with st.container():
+                    st.markdown(f"""
+                    <div class="query-card">
+                        <small style="color:#557799;">SEARCH_VECTOR_0{i+1}</small><br>
+                        <code style="color:#00eeff; background:transparent;">{item}</code>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    if st.button(f"COPY QUERY 0{i+1}", key=f"btn_{i}"):
+                        st.write(f"Query 0{i+1} selected.")
 
 else:
-    # IDLE STATE
-    st.markdown(f"""
-    <div style="height: 50vh; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.15;">
-        <div style="font-family: 'Syncopate'; font-size: 8rem; margin:0;">IDLE</div>
-        <div style="letter-spacing: 15px; font-size: 12px;">AWAITING COMMAND INJECTION</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# FOOTER
-st.markdown(f"""
-<div style="position: fixed; bottom: 15px; right: 20px; font-size: 9px; color: #445566; font-family: 'JetBrains Mono';">
-    V.2.1_STABLE // GROQ_LLAMA_3.3_70B // {time.strftime("%H:%M:%S")}
-</div>
-""", unsafe_allow_html=True)
+    with c_chaos:
+        st.container(height=600, border=True).markdown("<br><br><center>SYSTEM_IDLE: AWAITING_INPUT</center>", unsafe_allow_html=True)
+    with c_results:
+        st.container(height=600, border=True).markdown("<br><br><center>NO_VECTORS_DEFINED</center>", unsafe_allow_html=True)
